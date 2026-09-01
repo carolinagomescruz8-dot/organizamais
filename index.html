@@ -604,6 +604,63 @@
   }
 </style>
 
+
+<style id="organizamais-v4-2-finance">
+  #dashboardView::before{
+    content:"Visão mensal • competência selecionada + pendências até o fim da competência";
+    display:inline-flex;
+    margin:-4px 0 14px;
+    padding:7px 10px;
+    border-radius:999px;
+    font-size:10.5px;
+    font-weight:800;
+    color:#475569;
+    background:#fff;
+    border:1px solid #e5eaf1;
+  }
+  [data-theme="dark"] #dashboardView::before{
+    background:#121b2c;
+    color:#94a3b8;
+    border-color:#253249;
+  }
+</style>
+
+
+<style id="organizamais-v5-finance-core">
+  .competence-control{
+    display:flex;align-items:center;gap:6px;padding:5px 7px;
+    border:1px solid var(--om-border);background:var(--om-surface);
+    border-radius:14px;box-shadow:0 5px 14px rgba(15,23,42,.04)
+  }
+  .competence-label{font-size:10px;font-weight:900;color:var(--om-muted);text-transform:uppercase;letter-spacing:.6px}
+  #competencePicker{width:128px!important;margin:0!important;padding:7px 8px!important;min-height:32px}
+  .competence-status{font-size:10px;font-weight:900;padding:6px 8px;border-radius:999px}
+  .competence-status.open{background:#ecfdf5;color:#047857}
+  .competence-status.closed{background:#fff1f2;color:#be123c}
+  .competence-btn{padding:7px 9px;border-radius:9px;font-size:10px;font-weight:850;background:#eef2ff;color:#3730a3}
+  .account-balance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .account-card{padding:16px;border:1px solid var(--om-border);border-radius:16px;background:var(--om-surface-2)}
+  .account-card h3{margin-bottom:5px}
+  .account-card .balance{font-size:22px;font-weight:900;letter-spacing:-.6px}
+  .closed-month-lock{
+    margin:0 0 14px;padding:11px 14px;border:1px solid #fecdd3;background:#fff1f2;
+    color:#9f1239;border-radius:14px;font-size:12px;font-weight:800
+  }
+  [data-theme="dark"] .competence-status.open{background:rgba(16,185,129,.12)}
+  [data-theme="dark"] .competence-status.closed{background:rgba(244,63,94,.13)}
+  [data-theme="dark"] .closed-month-lock{background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.2);color:#fda4af}
+  @media(max-width:1050px){
+    .competence-label,.competence-btn{display:none}
+    .competence-control{padding:4px}
+  }
+  @media(max-width:760px){
+    .competence-control{order:5;width:100%;justify-content:space-between}
+    .competence-label,.competence-btn{display:inline-flex}
+    #competencePicker{width:132px!important}
+    .account-balance-grid{grid-template-columns:1fr}
+  }
+</style>
+
 </head>
 <body>
 
@@ -710,7 +767,9 @@
         <div class="nav-group">
           <div class="nav-title">Financeiro</div>
           <button id="navTransactions" onclick="setView('transactions')">💰 Lançamentos</button>
+          <button id="navAccounts" onclick="setView('accounts')">🏛️ Contas bancárias</button>
           <button id="navBills" onclick="setView('bills')">🧾 Contas</button>
+          <button id="navRecurring" onclick="setView('recurring')">🔁 Recorrências</button>
           <button id="navSalaries" onclick="setView('salaries')">💵 Salários</button>
           <button id="navCards" onclick="setView('cards')">💳 Cartões</button>
           <button id="navLoans" onclick="setView('loans')">🏦 Empréstimos</button>
@@ -749,6 +808,13 @@
         </div>
       </div>
       <div class="top-actions">
+        <div class="competence-control">
+          <span class="competence-label">Competência</span>
+          <input id="competencePicker" type="month" onchange="changeCompetence()" aria-label="Competência mensal">
+          <span id="competenceStatus" class="competence-status open">Aberta</span>
+          <button id="closeCompetenceBtn" class="competence-btn" type="button" onclick="closeCompetence()">Fechar mês</button>
+          <button id="reopenCompetenceBtn" class="competence-btn hidden" type="button" onclick="reopenCompetence()">Reabrir</button>
+        </div>
         <span id="syncStatus" class="sync-status"><span class="sync-dot"></span>Sincronizado</span>
         <button class="quick-top-btn" type="button" onclick="setView('transactions')">＋ Novo lançamento</button>
         <button class="theme-toggle-btn" type="button" onclick="toggleTheme()" aria-label="Alternar tema" title="Alternar tema">◐</button>
@@ -767,15 +833,15 @@
       <div class="grid">
         <div class="box"><small>💰 Receitas do mês</small><h2 id="incomeView" class="positive">R$ 0,00</h2></div>
         <div class="box"><small>📉 Despesas do mês</small><h2 id="expenseView" class="negative">R$ 0,00</h2></div>
-        <div class="box"><small>🏦 Saldo atual</small><h2 id="balanceView" class="blue">R$ 0,00</h2></div>
-        <div class="box"><small>📌 Lançamentos</small><h2 id="countView">0</h2></div>
+        <div class="box"><small>📊 Resultado do mês</small><h2 id="balanceView" class="blue">R$ 0,00</h2></div>
+        <div class="box"><small>📌 Lançamentos no mês</small><h2 id="countView">0</h2></div>
       </div>
 
       <div class="grid">
         <div class="box"><small>🧾 Contas a vencer</small><h2 id="dueSoonView" class="orange">0</h2></div>
         <div class="box"><small>🚨 Contas vencidas</small><h2 id="overdueView" class="negative">0</h2></div>
         <div class="box"><small>🏦 Empréstimos ativos</small><h2 id="activeLoansView" class="blue">0</h2></div>
-        <div class="box"><small>🔮 Saldo previsto</small><h2 id="projectedBalanceView" class="orange">R$ 0,00</h2></div>
+        <div class="box"><small>🔮 Previsão do mês</small><h2 id="projectedBalanceView" class="orange">R$ 0,00</h2></div>
       </div>
 
       <div class="grid">
@@ -789,7 +855,7 @@
         <div class="box"><small>🏦 Reservas totais</small><h2 id="reservesTotalView" class="positive">R$ 0,00</h2></div>
         <div class="box"><small>📈 Investimentos</small><h2 id="investmentsTotalView" class="blue">R$ 0,00</h2></div>
         <div class="box"><small>🏆 Score financeiro</small><h2 id="scoreView" class="orange">0/100</h2></div>
-        <div class="box"><small>💎 Patrimônio líquido</small><h2 id="netWorthView" class="blue">R$ 0,00</h2></div>
+        <div class="box"><small>💎 Patrimônio estimado</small><h2 id="netWorthView" class="blue">R$ 0,00</h2></div>
       </div>
 
       <div class="box" style="margin-bottom:18px">
@@ -858,6 +924,7 @@
             <option value="cash">Dinheiro/Carteira</option>
             <option value="other">Outro</option>
           </select>
+          <select id="quickAccountId"><option value="">Conta bancária (opcional)</option></select>
           <button class="btn green" onclick="addQuickTransaction()">Adicionar</button>
         </div>
 
@@ -902,6 +969,7 @@
             <option value="cash">Dinheiro/Carteira</option>
             <option value="other">Outro</option>
           </select>
+          <select id="accountId"><option value="">Conta bancária (opcional)</option></select>
           <select id="status">
             <option value="paid">Pago/Recebido</option>
             <option value="pending">Pendente</option>
@@ -976,6 +1044,50 @@
       </div>
     </section>
 
+
+    <section id="accountsView" class="hidden">
+      <div class="trial-banner">
+        <h2>🏛️ Contas bancárias</h2>
+        <p>Separe onde o dinheiro realmente está. Transferências entre contas não viram receita nem despesa.</p>
+      </div>
+
+      <div class="layout" style="margin-top:18px">
+        <div class="box">
+          <h3>Nova conta</h3>
+          <input id="bankAccountName" placeholder="Nome. Ex: Nubank, Itaú, Caixa da empresa">
+          <div class="row">
+            <select id="bankAccountType">
+              <option value="checking">Conta corrente</option>
+              <option value="savings">Poupança</option>
+              <option value="wallet">Carteira / dinheiro</option>
+              <option value="business">Conta empresarial</option>
+              <option value="other">Outra</option>
+            </select>
+            <input id="bankAccountInitial" type="number" step="0.01" placeholder="Saldo inicial">
+          </div>
+          <button class="btn green" onclick="addBankAccount()">Adicionar conta</button>
+        </div>
+
+        <div class="box">
+          <h3>Transferir entre contas</h3>
+          <select id="transferFrom"><option value="">Conta de origem</option></select>
+          <select id="transferTo"><option value="">Conta de destino</option></select>
+          <div class="row">
+            <input id="transferValue" type="number" step="0.01" placeholder="Valor">
+            <input id="transferDate" type="date">
+          </div>
+          <input id="transferNote" placeholder="Observação opcional">
+          <button class="btn green" onclick="addTransfer()">Transferir</button>
+          <p class="muted">A transferência altera os saldos das contas, mas não altera receitas/despesas.</p>
+        </div>
+      </div>
+
+      <div class="box" style="margin-top:18px">
+        <h3>Saldos das contas</h3>
+        <div id="bankAccountsList" class="empty">Nenhuma conta cadastrada.</div>
+      </div>
+    </section>
+
     <section id="cardsView" class="hidden">
       <div class="layout">
         <div class="box">
@@ -1004,6 +1116,24 @@
           <h3>Pastas de cartão</h3>
           <div id="cardsList" class="empty">Nenhum cartão cadastrado.</div>
         </div>
+      </div>
+
+      <div class="box" style="margin-top:18px">
+        <h3>🛒 Nova compra no cartão</h3>
+        <p class="muted">Informe o valor total da compra. O sistema cria automaticamente as parcelas nas faturas corretas conforme fechamento e vencimento do cartão.</p>
+        <div class="row">
+          <input id="cardPurchaseDesc" placeholder="Descrição da compra">
+          <select id="cardPurchaseCard"><option value="">Selecione o cartão</option></select>
+        </div>
+        <div class="row">
+          <input id="cardPurchaseTotal" type="number" step="0.01" placeholder="Valor total">
+          <input id="cardPurchaseInstallments" type="number" min="1" value="1" placeholder="Parcelas">
+        </div>
+        <div class="row">
+          <input id="cardPurchaseDate" type="date">
+          <select id="cardPurchaseAccount"><option value="">Conta bancária que pagará a fatura (opcional)</option></select>
+        </div>
+        <button class="btn green" onclick="addCardPurchase()">Gerar parcelas</button>
       </div>
     </section>
 
@@ -1067,6 +1197,53 @@
         <div class="box">
           <h3>Investimentos cadastrados</h3>
           <div id="investmentsList" class="empty">Nenhum investimento cadastrado.</div>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="recurringView" class="hidden">
+      <div class="trial-banner">
+        <h2>🔁 Recorrências</h2>
+        <p>Cadastre aluguel, internet, salário, mensalidades e outras contas que se repetem. Gere a competência atual com um clique.</p>
+      </div>
+
+      <div class="layout" style="margin-top:18px">
+        <div class="box">
+          <h3>Nova recorrência</h3>
+          <input id="recurringDesc" placeholder="Descrição. Ex: Internet, Aluguel, Salário">
+          <div class="row">
+            <input id="recurringValue" type="number" step="0.01" placeholder="Valor">
+            <input id="recurringDay" type="number" min="1" max="31" placeholder="Dia do vencimento">
+          </div>
+          <div class="row">
+            <select id="recurringType">
+              <option value="payable">Conta a pagar</option>
+              <option value="receivable">Conta a receber</option>
+            </select>
+            <select id="recurringFrequency">
+              <option value="monthly">Mensal</option>
+            </select>
+          </div>
+          <div class="row">
+            <input id="recurringCategory" placeholder="Categoria. Ex: Internet">
+            <select id="recurringSource">
+              <option value="salary1">Salário 1</option>
+              <option value="salary2">Salário 2</option>
+              <option value="business">Conta da empresa</option>
+              <option value="cash">Dinheiro/Carteira</option>
+              <option value="other">Outro</option>
+            </select>
+          </div>
+          <select id="recurringAccountId"><option value="">Conta bancária (opcional)</option></select>
+          <button class="btn green" onclick="addRecurringRule()">Salvar recorrência</button>
+        </div>
+
+        <div class="box">
+          <h3>Gerar competência</h3>
+          <p class="muted">O sistema evita duplicar a mesma recorrência na mesma competência.</p>
+          <button class="btn green" onclick="generateRecurringForCompetence()">Gerar contas de <span id="recurringCompetenceLabel">competência atual</span></button>
+          <div id="recurringList" class="empty" style="margin-top:14px">Nenhuma recorrência cadastrada.</div>
         </div>
       </div>
     </section>
@@ -1532,6 +1709,11 @@
   let creditCards = [];
   let reserves = [];
   let investments = [];
+  let bankAccounts = [];
+  let transfers = [];
+  let recurringRules = [];
+  let monthlyClosings = [];
+  let selectedCompetence = new Date().toISOString().slice(0,7);
   let unsubTransactions = null;
   let unsubGoals = null;
   let unsubBills = null;
@@ -1539,6 +1721,10 @@
   let unsubCards = null;
   let unsubReserves = null;
   let unsubInvestments = null;
+  let unsubBankAccounts = null;
+  let unsubTransfers = null;
+  let unsubRecurring = null;
+  let unsubClosings = null;
   let financeChart = null;
   let selectedProfilePhoto = "";
 
@@ -1811,7 +1997,7 @@
 
   function getCategoryTotals(type) {
     const totals = {};
-    transactions.filter(t => t.type === type).forEach(t => {
+    currentMonthTransactions().filter(t => t.type === type).forEach(t => {
       totals[t.category] = (totals[t.category] || 0) + Number(t.value || 0);
     });
     return totals;
@@ -1827,13 +2013,13 @@
     const box = $("aiInsights");
     if (!box) return;
 
-    if (!transactions.length) {
+    if (!currentMonthTransactions().length && !bills.length) {
       box.innerHTML = '<div class="empty">Adicione lançamentos para receber alertas inteligentes.</div>';
       return;
     }
 
-    const income = transactions.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.value||0),0);
-    const expense = transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.value||0),0);
+    const income = currentMonthIncome();
+    const expense = currentMonthExpense();
     const balance = income - expense;
     const topExpense = getTopCategory("expense");
     const topIncome = getTopCategory("income");
@@ -1862,9 +2048,9 @@
     }
 
     if (balance > 0) {
-      insights.push({type:"good", text:`📈 Seu saldo atual está positivo em ${money(balance)}. Esse valor pode ser direcionado para reserva, metas ou investimento.`});
+      insights.push({type:"good", text:`📈 Seu resultado do mês está positivo em ${money(balance)}. Esse valor pode ser direcionado para reserva, metas ou investimento.`});
     } else if (balance < 0) {
-      insights.push({type:"danger", text:`📉 Seu saldo está negativo em ${money(Math.abs(balance))}. Priorize reduzir saídas ou aumentar entradas.`});
+      insights.push({type:"danger", text:`📉 Seu resultado do mês está negativo em ${money(Math.abs(balance))}. Priorize reduzir saídas ou aumentar entradas.`});
     }
 
     const pending = transactions.filter(t => t.status === "pending").reduce((s,t)=>s+Number(t.value||0),0);
@@ -1876,20 +2062,20 @@
     const soonBills = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3);
     const activeLoans = loans.filter(l => l.status !== "finished");
     const loanTotal = activeLoans.reduce((s,l)=>s+(Math.max(0, Number(l.installments||0)-Number(l.paidInstallments||0))*Number(l.installment||0)),0);
-    const pendingPayables = bills.filter(b => b.status !== "paid" && b.type === "payable").reduce((s,b)=>s+Number(b.value||0),0);
-    const pendingReceivables = bills.filter(b => b.status !== "paid" && b.type === "receivable").reduce((s,b)=>s+Number(b.value||0),0);
+    const pendingPayables = sumValues(openBillsThroughCurrentMonth("payable"));
+    const pendingReceivables = sumValues(openBillsThroughCurrentMonth("receivable"));
     const projectedBalance = balance + pendingReceivables - pendingPayables;
 
     if (overdueBills.length) insights.push({type:"danger", text:`🚨 Você tem ${overdueBills.length} conta(s) vencida(s). Regularize para evitar juros e perda de controle.`});
     if (soonBills.length) insights.push({type:"warn", text:`⏰ Você tem ${soonBills.length} conta(s) vencendo em até 3 dias. Programe o pagamento.`});
     const reservePayables = bills
-      .filter(b => b.status !== "paid" && b.sourceAccount === "reserve_emergency" && b.type === "payable")
+      .filter(b => b.status !== "paid" && b.sourceAccount === "reserve_emergency" && b.type === "payable" && isDueThroughCurrentMonth(b.dueDate))
       .reduce((s,b)=>s+Number(b.value||0),0);
 
     if (pendingPayables > 0) insights.push({type:"warn", text:`🧾 Você tem ${money(pendingPayables)} em contas a pagar pendentes. Esse valor já reduz seu saldo previsto.`});
     if (reservePayables > 0) insights.push({type:"warn", text:`🏦 Existem ${money(reservePayables)} programados para sair da Reserva de Emergência. Use essa reserva apenas em situações necessárias.`});
     if (pendingReceivables > 0) insights.push({type:"good", text:`💵 Você tem ${money(pendingReceivables)} em contas a receber pendentes. Esse valor entra no seu saldo previsto.`});
-    if (projectedBalance < 0) insights.push({type:"danger", text:`🔮 Seu saldo previsto fica negativo em ${money(Math.abs(projectedBalance))} considerando contas pendentes.`});
+    if (projectedBalance < 0) insights.push({type:"danger", text:`🔮 Sua previsão do mês fica negativa em ${money(Math.abs(projectedBalance))} considerando contas pendentes.`});
     if (activeLoans.length) insights.push({type:"warn", text:`🏦 Você possui ${activeLoans.length} empréstimo(s) ativo(s), com saldo estimado de ${money(loanTotal)} a pagar.`});
 
     const cardsDue = creditCards.filter(c => {
@@ -1910,8 +2096,8 @@
     const canvas = $("financeChart");
     if (!canvas) return;
 
-    const income = transactions.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.value||0),0);
-    const expense = transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.value||0),0);
+    const income = currentMonthIncome();
+    const expense = currentMonthExpense();
     const balance = income - expense;
 
     const data = {
@@ -2053,6 +2239,8 @@
 
   function loadWorkspaceData() {
     if (!currentWorkspaceId) return;
+    if ($("competencePicker")) $("competencePicker").value = selectedCompetence;
+    renderCompetenceState();
     if (unsubTransactions) unsubTransactions();
     if (unsubGoals) unsubGoals();
 
@@ -2108,6 +2296,7 @@
       snap.forEach(d => creditCards.push({id:d.id, ...d.data()}));
       creditCards.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
       renderCreditCards();
+      populateAccountSelects();
       updateDashboard();
       renderAIInsights();
       renderNotifications();
@@ -2133,14 +2322,48 @@
       updateDashboard();
       renderAIInsights();
     });
+
+    if (unsubBankAccounts) unsubBankAccounts();
+    const aq = query(collection(db, "bankAccounts"), where("userId","==",currentUser.uid), where("workspaceId","==",currentWorkspaceId));
+    unsubBankAccounts = onSnapshot(aq, snap => {
+      bankAccounts = [];
+      snap.forEach(d => bankAccounts.push({id:d.id, ...d.data()}));
+      bankAccounts.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+      renderBankAccounts();
+      populateAccountSelects();
+    });
+
+    if (unsubTransfers) unsubTransfers();
+    const trq = query(collection(db, "transfers"), where("userId","==",currentUser.uid), where("workspaceId","==",currentWorkspaceId));
+    unsubTransfers = onSnapshot(trq, snap => {
+      transfers = [];
+      snap.forEach(d => transfers.push({id:d.id, ...d.data()}));
+      renderBankAccounts();
+    });
+
+    if (unsubRecurring) unsubRecurring();
+    const rrq = query(collection(db, "recurringRules"), where("userId","==",currentUser.uid), where("workspaceId","==",currentWorkspaceId));
+    unsubRecurring = onSnapshot(rrq, snap => {
+      recurringRules = [];
+      snap.forEach(d => recurringRules.push({id:d.id, ...d.data()}));
+      renderRecurringRules();
+    });
+
+    if (unsubClosings) unsubClosings();
+    const mcq = query(collection(db, "monthlyClosings"), where("userId","==",currentUser.uid), where("workspaceId","==",currentWorkspaceId));
+    unsubClosings = onSnapshot(mcq, snap => {
+      monthlyClosings = [];
+      snap.forEach(d => monthlyClosings.push({id:d.id, ...d.data()}));
+      renderCompetenceState();
+    });
   }
 
   window.setView = (view) => {
-    ["dashboard","transactions","goals","reserves","investments","bills","salaries","cards","loans","workspaces","reports","calendar","help","subscription","settings","admin"].forEach(v => {
+    ["dashboard","transactions","accounts","goals","reserves","investments","bills","recurring","salaries","cards","loans","workspaces","reports","calendar","help","subscription","settings","admin"].forEach(v => {
       $(v+"View").classList.toggle("hidden", v !== view);
       $("nav"+capitalize(v)).classList.toggle("active", v === view);
     });
-    const titles = {dashboard:"Dashboard",transactions:"Lançamentos",goals:"Metas",reserves:"Reservas",investments:"Investimentos",bills:"Contas",salaries:"Salários",cards:"Cartões",loans:"Empréstimos",workspaces:"Ambientes",reports:"Relatórios",calendar:"Calendário",help:"Como funciona",subscription:"Assinatura",settings:"Configurações",admin:"Administração"};
+    const titles = {dashboard:"Dashboard",transactions:"Lançamentos",accounts:"Contas bancárias",goals:"Metas",reserves:"Reservas",investments:"Investimentos",bills:"Contas",recurring:"Recorrências",salaries:"Salários",cards:"Cartões",loans:"Empréstimos",workspaces:"Ambientes",reports:"Relatórios",calendar:"Calendário",help:"Como funciona",subscription:"Assinatura",settings:"Configurações",admin:"Administração"};
     $("pageTitle").textContent = titles[view];
   };
 
@@ -2260,6 +2483,7 @@
       type: $("quickType").value,
       category: getSelectedCategory("quickCategory","quickCustomCategory"),
       sourceAccount: $("quickSource")?.value || "salary1",
+      accountId: $("quickAccountId")?.value || "",
       cardName: isCardCategory($("quickCategory").value) ? getSelectedCardName("quickCardName", "quickCustomCardName") : "",
       installmentCurrent: isCardCategory($("quickCategory").value) ? Number($("quickInstallmentCurrent")?.value || 0) : 0,
       installmentTotal: isCardCategory($("quickCategory").value) ? Number($("quickInstallmentTotal")?.value || 0) : 0,
@@ -2280,6 +2504,7 @@
       type: $("type").value,
       category: getSelectedCategory("category","customCategory"),
       sourceAccount: $("sourceAccount")?.value || "salary1",
+      accountId: $("accountId")?.value || "",
       cardName: isCardCategory($("category").value) ? getSelectedCardName("cardName", "customCardName") : "",
       installmentCurrent: isCardCategory($("category").value) ? Number($("installmentCurrent")?.value || 0) : 0,
       installmentTotal: isCardCategory($("category").value) ? Number($("installmentTotal")?.value || 0) : 0,
@@ -2297,6 +2522,7 @@
 
   async function createTransaction(data) {
     if (!currentWorkspaceId) return alert("Crie um ambiente primeiro.");
+    if (!ensureCompetenceOpen(data.date || selectedCompetence)) return;
     if (!data.desc || data.value <= 0) return alert("Preencha descrição e valor maior que zero.");
     if (isCardCategory(data.category) && !data.cardName) return alert("Selecione qual cartão será usado.");
     if (isCardCategory(data.category) && !validateInstallments(data.installmentCurrent, data.installmentTotal)) {
@@ -2312,6 +2538,8 @@
   }
 
   window.removeTransaction = async id => {
+    const t = transactions.find(x => x.id === id);
+    if (t && !ensureCompetenceOpen(t.date || selectedCompetence)) return;
     if (confirm("Excluir este lançamento?")) await deleteDoc(doc(db, "transactions", id));
   };
 
@@ -2433,9 +2661,111 @@
     `).join("");
   }
 
+
+  // ================================================================
+  // MOTOR FINANCEIRO V4.2
+  // Uma única regra de período para Dashboard, Salários, IA e Relatórios.
+  // ================================================================
+
+  function parseAppDate(value) {
+    if (!value) return null;
+    const parts = String(value).slice(0,10).split("-");
+    if (parts.length !== 3) return null;
+    const y = Number(parts[0]), m = Number(parts[1]), d = Number(parts[2]);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d, 12, 0, 0);
+  }
+
+  function competenceFromDate(value) {
+    return value ? String(value).slice(0,7) : "";
+  }
+
+  function isCurrentMonthDate(value) {
+    return competenceFromDate(value) === selectedCompetence;
+  }
+
+  function competenceEndDate(comp = selectedCompetence) {
+    const [y,m] = String(comp).split("-").map(Number);
+    return new Date(y, m, 0, 23, 59, 59);
+  }
+
+  function isDueThroughCurrentMonth(value) {
+    const dt = parseAppDate(value);
+    if (!dt) return false;
+    return dt <= competenceEndDate();
+  }
+
+  function selectedCompetenceLabel() {
+    const [y,m] = selectedCompetence.split("-").map(Number);
+    return new Date(y,m-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  }
+
+  function isCompetenceClosed(comp = selectedCompetence) {
+    return monthlyClosings.some(c => c.competence === comp && c.status === "closed");
+  }
+
+  function ensureCompetenceOpen(dateOrCompetence = selectedCompetence) {
+    const comp = String(dateOrCompetence).length >= 10 ? competenceFromDate(dateOrCompetence) : String(dateOrCompetence).slice(0,7);
+    if (isCompetenceClosed(comp)) {
+      alert(`A competência ${comp} está fechada. Reabra o mês antes de alterar dados financeiros.`);
+      return false;
+    }
+    return true;
+  }
+
+  function currentMonthTransactions() {
+    return transactions.filter(t => isCurrentMonthDate(t.date));
+  }
+
+  function currentMonthBills() {
+    return bills.filter(b => isCurrentMonthDate(b.dueDate));
+  }
+
+  function openBillsThroughCurrentMonth(type = "") {
+    return bills.filter(b =>
+      b.status !== "paid" &&
+      (!type || b.type === type) &&
+      isDueThroughCurrentMonth(b.dueDate)
+    );
+  }
+
+  function sumValues(list) {
+    return list.reduce((s, item) => s + Number(item.value || 0), 0);
+  }
+
+  function currentMonthIncome() {
+    return sumValues(currentMonthTransactions().filter(t => t.type === "income"));
+  }
+
+  function currentMonthExpense() {
+    return sumValues(currentMonthTransactions().filter(t => t.type === "expense"));
+  }
+
+  function currentMonthResult() {
+    return currentMonthIncome() - currentMonthExpense();
+  }
+
+  function currentMonthProjectedResult() {
+    const pendingPayables = sumValues(openBillsThroughCurrentMonth("payable"));
+    const pendingReceivables = sumValues(openBillsThroughCurrentMonth("receivable"));
+    return currentMonthResult() + pendingReceivables - pendingPayables;
+  }
+
+  function cashLedgerBalance() {
+    // Reserva é reduzida diretamente no cadastro da reserva.
+    // Compra direta de cartão representa obrigação/fatura e não dinheiro saindo da conta naquele instante.
+    const income = sumValues(transactions.filter(t => t.type === "income"));
+    const cashExpenses = sumValues(transactions.filter(t =>
+      t.type === "expense" &&
+      t.sourceAccount !== "reserve_emergency" &&
+      !t.cardName
+    ));
+    return income - cashExpenses;
+  }
+
   function calculateFinancialScore() {
-    const income = transactions.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.value||0),0);
-    const expense = transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.value||0),0);
+    const income = currentMonthIncome();
+    const expense = currentMonthExpense();
     const balance = income - expense;
     const reserveTotal = reserves.reduce((s,r)=>s+Number(r.current||0),0);
     const overdue = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) < 0).length;
@@ -2446,7 +2776,7 @@
     if (balance > 0) score += 15;
     if (income > 0 && expense / income < 0.7) score += 10;
     if (reserveTotal > 0) score += 10;
-    if (overdue === 0) score += 10; else score -= overdue * 8;
+    if (overdue === 0) score += 10; else score -= Math.min(32, overdue * 8);
     if (income > 0 && loansTotal / income > 3) score -= 12;
     return Math.max(0, Math.min(100, Math.round(score)));
   }
@@ -2454,10 +2784,10 @@
   function updatePremiumDashboard() {
     const reserveTotal = reserves.reduce((s,r)=>s+Number(r.current||0),0);
     const investmentTotal = investments.reduce((s,i)=>s+Number(i.value||0),0);
-    const income = transactions.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.value||0),0);
-    const expense = transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.value||0),0);
     const loansTotal = loans.filter(l=>l.status!=="finished").reduce((s,l)=>s+(Math.max(0, Number(l.installments||0)-Number(l.paidInstallments||0))*Number(l.installment||0)),0);
-    const netWorth = (income - expense) + reserveTotal + investmentTotal - loansTotal;
+    const openCardLiability = getAllCardNames().reduce((s,name)=>s+cardInvoiceTotal(name),0) +
+      creditCards.reduce((s,c)=>s+Number(c.used||0),0);
+    const netWorth = cashLedgerBalance() + reserveTotal + investmentTotal - loansTotal - openCardLiability;
     const score = calculateFinancialScore();
 
     if ($("reservesTotalView")) $("reservesTotalView").textContent = money(reserveTotal);
@@ -2480,11 +2810,10 @@
   function renderFutureCashFlow() {
     const box = $("futureCashFlow");
     if (!box) return;
-    const current = transactions.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.value||0),0) -
-                    transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.value||0),0);
+    const current = currentMonthResult();
     const horizons = [7, 15, 30, 90].map(days => {
-      const payables = bills.filter(b => b.status !== "paid" && b.type === "payable" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) <= days).reduce((s,b)=>s+Number(b.value||0),0);
-      const receivables = bills.filter(b => b.status !== "paid" && b.type === "receivable" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) <= days).reduce((s,b)=>s+Number(b.value||0),0);
+      const payables = bills.filter(b => b.status !== "paid" && b.type === "payable" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= days).reduce((s,b)=>s+Number(b.value||0),0);
+      const receivables = bills.filter(b => b.status !== "paid" && b.type === "receivable" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= days).reduce((s,b)=>s+Number(b.value||0),0);
       return { days, value: current + receivables - payables };
     });
     box.innerHTML = horizons.map(h => `
@@ -2539,26 +2868,24 @@
 
 
   function updateDashboard() {
-    const income = transactions.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.value||0),0);
-    const expense = transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.value||0),0);
+    renderCompetenceState();
+    const monthTx = currentMonthTransactions();
+    const income = sumValues(monthTx.filter(t=>t.type==="income"));
+    const expense = sumValues(monthTx.filter(t=>t.type==="expense"));
     const balance = income - expense;
+
     $("incomeView").textContent = money(income);
     $("expenseView").textContent = money(expense);
     $("balanceView").textContent = money(balance);
-    $("countView").textContent = transactions.length;
+    $("balanceView").className = balance >= 0 ? "positive" : "negative";
+    $("countView").textContent = monthTx.length;
 
     const dueSoon = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3).length;
     const overdue = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) < 0).length;
     const activeLoans = loans.filter(l => l.status !== "finished").length;
 
-    const pendingPayables = bills
-      .filter(b => b.status !== "paid" && b.type === "payable")
-      .reduce((s,b)=>s+Number(b.value||0),0);
-
-    const pendingReceivables = bills
-      .filter(b => b.status !== "paid" && b.type === "receivable")
-      .reduce((s,b)=>s+Number(b.value||0),0);
-
+    const pendingPayables = sumValues(openBillsThroughCurrentMonth("payable"));
+    const pendingReceivables = sumValues(openBillsThroughCurrentMonth("receivable"));
     const projectedBalance = balance + pendingReceivables - pendingPayables;
 
     if ($("dueSoonView")) $("dueSoonView").textContent = dueSoon;
@@ -2570,17 +2897,16 @@
     }
 
     const cardNames = getAllCardNames();
-
     const cardsDueSoon = creditCards.filter(c => {
       const d = daysUntilDayOfMonth(c.dueDay);
       return d !== null && d <= 3;
     }).length;
 
     const cardInvoice =
-      creditCards.reduce((s,c)=>s+cardInvoiceTotal(c.name)+Number(c.used||0),0) +
+      creditCards.reduce((s,c)=>s+cardInvoiceForCompetence(c.name)+Number(c.used||0),0) +
       cardNames
         .filter(name => !creditCards.some(c => c.name === name))
-        .reduce((s,name)=>s+inferredCardInvoiceTotal(name),0);
+        .reduce((s,name)=>s+cardInvoiceForCompetence(name),0);
 
     if ($("cardsCountView")) $("cardsCountView").textContent = cardNames.length;
     if ($("cardsDueSoonView")) $("cardsDueSoonView").textContent = cardsDueSoon;
@@ -2595,7 +2921,7 @@
   }
 
   function renderLatest() {
-    const latest = transactions.slice(0,5);
+    const latest = currentMonthTransactions().slice(0,5);
     $("latestTransactions").className = latest.length ? "" : "empty";
     $("latestTransactions").innerHTML = latest.length ? latest.map(transactionHtml).join("") : "Nenhum lançamento.";
   }
@@ -2664,11 +2990,15 @@
       .filter(b => b.status !== "paid" && (b.cardName === cardName || (!b.cardName && cardName === "Cartão sem nome" && isCardCategory(b.category))))
       .reduce((s,b)=>s+Number(b.value||0),0);
 
-    const transactionTotal = transactions
-      .filter(t => t.type === "expense" && (t.cardName === cardName || (!t.cardName && cardName === "Cartão sem nome" && isCardCategory(t.category))))
+    const directCardPurchases = currentMonthTransactions()
+      .filter(t =>
+        t.type === "expense" &&
+        !t.billId &&
+        (t.cardName === cardName || (!t.cardName && cardName === "Cartão sem nome" && isCardCategory(t.category)))
+      )
       .reduce((s,t)=>s+Number(t.value||0),0);
 
-    return billsTotal + transactionTotal;
+    return billsTotal + directCardPurchases;
   }
 
 
@@ -2689,10 +3019,347 @@
   }
 
   function cardInvoiceTotal(cardName) {
-    return bills
+    const pendingBills = bills
       .filter(b => b.status !== "paid" && b.cardName === cardName)
       .reduce((s,b)=>s+Number(b.value||0),0);
+
+    const directCardPurchases = currentMonthTransactions()
+      .filter(t => t.type === "expense" && !t.billId && t.cardName === cardName)
+      .reduce((s,t)=>s+Number(t.value||0),0);
+
+    return pendingBills + directCardPurchases;
   }
+
+
+  // ================================================================
+  // ORGANIZAMAIS V5 — COMPETÊNCIA, CONTAS, TRANSFERÊNCIAS, RECORRÊNCIAS
+  // E CICLO REAL DE CARTÃO
+  // ================================================================
+
+  function clampDay(year, monthIndex, day) {
+    const last = new Date(year, monthIndex + 1, 0).getDate();
+    return Math.max(1, Math.min(Number(day || 1), last));
+  }
+
+  function dateForCompetence(comp, day) {
+    const [year, month] = String(comp).split("-").map(Number);
+    const safe = clampDay(year, month - 1, day);
+    return `${year}-${String(month).padStart(2,"0")}-${String(safe).padStart(2,"0")}`;
+  }
+
+  function addMonthsToDate(dateStr, months) {
+    const dt = parseAppDate(dateStr);
+    if (!dt) return dateStr;
+    const target = new Date(dt.getFullYear(), dt.getMonth() + Number(months || 0), 1);
+    const day = clampDay(target.getFullYear(), target.getMonth(), dt.getDate());
+    return `${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  }
+
+  window.changeCompetence = () => {
+    selectedCompetence = $("competencePicker")?.value || new Date().toISOString().slice(0,7);
+    renderCompetenceState();
+    updateDashboard();
+    renderTransactions();
+    renderBills();
+    renderSalarySummary();
+    renderReports();
+    renderCreditCards();
+    renderCalendar();
+    if ($("recurringCompetenceLabel")) $("recurringCompetenceLabel").textContent = selectedCompetenceLabel();
+  };
+
+  function renderCompetenceState() {
+    if ($("competencePicker")) $("competencePicker").value = selectedCompetence;
+    const closed = isCompetenceClosed();
+    if ($("competenceStatus")) {
+      $("competenceStatus").textContent = closed ? "Fechada" : "Aberta";
+      $("competenceStatus").className = "competence-status " + (closed ? "closed" : "open");
+    }
+    if ($("closeCompetenceBtn")) $("closeCompetenceBtn").classList.toggle("hidden", closed);
+    if ($("reopenCompetenceBtn")) $("reopenCompetenceBtn").classList.toggle("hidden", !closed);
+    if ($("recurringCompetenceLabel")) $("recurringCompetenceLabel").textContent = selectedCompetenceLabel();
+  }
+
+  window.closeCompetence = async () => {
+    if (isCompetenceClosed()) return;
+    const income = currentMonthIncome();
+    const expense = currentMonthExpense();
+    const pendingPayables = bills.filter(b => b.status !== "paid" && b.type === "payable" && competenceFromDate(b.dueDate) === selectedCompetence).reduce((s,b)=>s+Number(b.value||0),0);
+    const pendingReceivables = bills.filter(b => b.status !== "paid" && b.type === "receivable" && competenceFromDate(b.dueDate) === selectedCompetence).reduce((s,b)=>s+Number(b.value||0),0);
+
+    if (!confirm(`Fechar ${selectedCompetenceLabel()}?\n\nReceitas: ${money(income)}\nDespesas: ${money(expense)}\nPendências a pagar: ${money(pendingPayables)}\nPendências a receber: ${money(pendingReceivables)}\n\nDepois do fechamento, alterações financeiras desse mês ficarão bloqueadas até reabrir.`)) return;
+
+    await addDoc(collection(db, "monthlyClosings"), {
+      userId: currentUser.uid,
+      workspaceId: currentWorkspaceId,
+      competence: selectedCompetence,
+      status: "closed",
+      income, expense, pendingPayables, pendingReceivables,
+      closedAt: serverTimestamp()
+    });
+  };
+
+  window.reopenCompetence = async () => {
+    const closing = monthlyClosings.find(c => c.competence === selectedCompetence && c.status === "closed");
+    if (!closing) return;
+    if (!confirm(`Reabrir ${selectedCompetenceLabel()} para edição?`)) return;
+    await setDoc(doc(db, "monthlyClosings", closing.id), {
+      status: "open",
+      reopenedAt: serverTimestamp()
+    }, { merge:true });
+  };
+
+  function accountTypeLabel(type) {
+    return ({checking:"Conta corrente",savings:"Poupança",wallet:"Carteira",business:"Empresarial",other:"Outra"})[type] || type || "Conta";
+  }
+
+  function accountBalance(account) {
+    let total = Number(account.initialBalance || 0);
+    transactions.forEach(t => {
+      if (t.accountId !== account.id) return;
+      total += t.type === "income" ? Number(t.value||0) : -Number(t.value||0);
+    });
+    transfers.forEach(tr => {
+      if (tr.fromAccountId === account.id) total -= Number(tr.value||0);
+      if (tr.toAccountId === account.id) total += Number(tr.value||0);
+    });
+    return total;
+  }
+
+  function populateAccountSelects() {
+    const ids = ["quickAccountId","accountId","billAccountId","recurringAccountId","cardPurchaseAccount"];
+    ids.forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      const current = el.value;
+      const first = id === "cardPurchaseAccount" ? "Conta bancária que pagará a fatura (opcional)" : "Conta bancária (opcional)";
+      el.innerHTML = `<option value="">${first}</option>` + bankAccounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join("");
+      if (bankAccounts.some(a => a.id === current)) el.value = current;
+    });
+
+    ["transferFrom","transferTo"].forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      const current = el.value;
+      el.innerHTML = `<option value="">${id === "transferFrom" ? "Conta de origem" : "Conta de destino"}</option>` + bankAccounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join("");
+      if (bankAccounts.some(a => a.id === current)) el.value = current;
+    });
+
+    const cp = $("cardPurchaseCard");
+    if (cp) {
+      const current = cp.value;
+      cp.innerHTML = '<option value="">Selecione o cartão</option>' + creditCards.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join("");
+      if (creditCards.some(c => c.name === current)) cp.value = current;
+    }
+  }
+
+  window.addBankAccount = async () => {
+    const name = $("bankAccountName").value.trim();
+    const type = $("bankAccountType").value;
+    const initialBalance = Number($("bankAccountInitial").value || 0);
+    if (!name) return alert("Informe o nome da conta.");
+    await addDoc(collection(db, "bankAccounts"), {
+      userId: currentUser.uid, workspaceId: currentWorkspaceId,
+      name, type, initialBalance, createdAt: serverTimestamp()
+    });
+    $("bankAccountName").value = "";
+    $("bankAccountInitial").value = "";
+  };
+
+  window.removeBankAccount = async id => {
+    if (transactions.some(t => t.accountId === id) || transfers.some(t => t.fromAccountId === id || t.toAccountId === id)) {
+      return alert("Essa conta possui movimentações. Para preservar o histórico, não é possível excluí-la.");
+    }
+    if (confirm("Excluir esta conta bancária?")) await deleteDoc(doc(db,"bankAccounts",id));
+  };
+
+  function renderBankAccounts() {
+    const list = $("bankAccountsList");
+    if (!list) return;
+    if (!bankAccounts.length) {
+      list.className = "empty";
+      list.innerHTML = "Nenhuma conta cadastrada.";
+      return;
+    }
+    list.className = "account-balance-grid";
+    list.innerHTML = bankAccounts.map(a => {
+      const bal = accountBalance(a);
+      return `<div class="account-card">
+        <small>${escapeHtml(accountTypeLabel(a.type))}</small>
+        <h3>${escapeHtml(a.name)}</h3>
+        <div class="balance ${bal>=0?"positive":"negative"}">${money(bal)}</div>
+        <small>Saldo inicial: ${money(a.initialBalance||0)}</small><br>
+        <button class="btn red mini" style="margin-top:10px" onclick="removeBankAccount('${a.id}')">Excluir</button>
+      </div>`;
+    }).join("");
+  }
+
+  window.addTransfer = async () => {
+    const fromAccountId = $("transferFrom").value;
+    const toAccountId = $("transferTo").value;
+    const value = Number($("transferValue").value || 0);
+    const date = $("transferDate").value || dateForCompetence(selectedCompetence, new Date().getDate());
+    const note = $("transferNote").value.trim();
+    if (!fromAccountId || !toAccountId || fromAccountId === toAccountId) return alert("Selecione contas de origem e destino diferentes.");
+    if (value <= 0) return alert("Informe um valor maior que zero.");
+    if (!ensureCompetenceOpen(date)) return;
+    await addDoc(collection(db,"transfers"), {
+      userId:currentUser.uid, workspaceId:currentWorkspaceId,
+      fromAccountId,toAccountId,value,date,note,
+      createdAt:serverTimestamp()
+    });
+    $("transferValue").value = "";
+    $("transferNote").value = "";
+  };
+
+  window.addRecurringRule = async () => {
+    const desc = $("recurringDesc").value.trim();
+    const value = Number($("recurringValue").value || 0);
+    const day = Number($("recurringDay").value || 0);
+    const type = $("recurringType").value;
+    const frequency = $("recurringFrequency").value;
+    const category = $("recurringCategory").value.trim() || "Outros";
+    const sourceAccount = $("recurringSource").value;
+    const accountId = $("recurringAccountId").value || "";
+    if (!desc || value <= 0 || day < 1 || day > 31) return alert("Preencha descrição, valor e dia de vencimento.");
+    await addDoc(collection(db,"recurringRules"), {
+      userId:currentUser.uid, workspaceId:currentWorkspaceId,
+      desc,value,day,type,frequency,category,sourceAccount,accountId,
+      active:true,startCompetence:selectedCompetence,createdAt:serverTimestamp()
+    });
+    ["recurringDesc","recurringValue","recurringDay","recurringCategory"].forEach(id => $(id).value = "");
+  };
+
+  window.toggleRecurringRule = async id => {
+    const r = recurringRules.find(x => x.id === id);
+    if (!r) return;
+    await setDoc(doc(db,"recurringRules",id),{active:!r.active,updatedAt:serverTimestamp()},{merge:true});
+  };
+
+  window.removeRecurringRule = async id => {
+    if (confirm("Excluir esta recorrência? As contas já geradas serão preservadas.")) await deleteDoc(doc(db,"recurringRules",id));
+  };
+
+  function renderRecurringRules() {
+    const list = $("recurringList");
+    if (!list) return;
+    if (!recurringRules.length) {
+      list.className = "empty";
+      list.innerHTML = "Nenhuma recorrência cadastrada.";
+      return;
+    }
+    list.className = "";
+    list.innerHTML = recurringRules.map(r => `<div class="item">
+      <div>
+        <strong>${escapeHtml(r.desc)}</strong><br>
+        <small>${r.type==="payable"?"A pagar":"A receber"} • todo dia ${r.day} • ${money(r.value)} • ${escapeHtml(r.category||"Outros")}</small>
+      </div>
+      <div class="actions">
+        <span class="meta-chip ${r.active?"good":""}">${r.active?"Ativa":"Pausada"}</span>
+        <button class="btn light mini" onclick="toggleRecurringRule('${r.id}')">${r.active?"Pausar":"Ativar"}</button>
+        <button class="btn red mini" onclick="removeRecurringRule('${r.id}')">Excluir</button>
+      </div>
+    </div>`).join("");
+  }
+
+  window.generateRecurringForCompetence = async () => {
+    if (!ensureCompetenceOpen(selectedCompetence)) return;
+    const active = recurringRules.filter(r => r.active !== false && (!r.startCompetence || r.startCompetence <= selectedCompetence));
+    if (!active.length) return alert("Nenhuma recorrência ativa para gerar.");
+
+    let created = 0;
+    for (const r of active) {
+      const exists = bills.some(b => b.recurringRuleId === r.id && b.competence === selectedCompetence);
+      if (exists) continue;
+      const dueDate = dateForCompetence(selectedCompetence, r.day);
+      await addDoc(collection(db,"bills"), {
+        userId:currentUser.uid, workspaceId:currentWorkspaceId,
+        desc:r.desc, value:Number(r.value||0), dueDate,
+        competence:selectedCompetence,
+        type:r.type || "payable", status:"pending",
+        category:r.category || "Outros",
+        sourceAccount:r.sourceAccount || "salary1",
+        accountId:r.accountId || "",
+        cardName:"",installmentCurrent:0,installmentTotal:0,
+        recurringRuleId:r.id,recurringGenerated:true,
+        createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+      });
+      created++;
+    }
+    alert(created ? `${created} conta(s) recorrente(s) gerada(s) para ${selectedCompetenceLabel()}.` : "Todas as recorrências desta competência já haviam sido geradas.");
+  };
+
+  function getCardByName(name) {
+    return creditCards.find(c => c.name === name);
+  }
+
+  function firstInvoiceDueDate(card, purchaseDate) {
+    const dt = parseAppDate(purchaseDate);
+    if (!dt || !card) return purchaseDate;
+    const close = Number(card.closingDay || 1);
+    const due = Number(card.dueDay || 1);
+    const afterClose = dt.getDate() > close;
+    let cycleYear = dt.getFullYear();
+    let cycleMonth = dt.getMonth() + (afterClose ? 1 : 0);
+    const cycleBase = new Date(cycleYear, cycleMonth, 1);
+    let dueMonthOffset = due <= close ? 1 : 0;
+    const dueBase = new Date(cycleBase.getFullYear(), cycleBase.getMonth() + dueMonthOffset, 1);
+    const safeDay = clampDay(dueBase.getFullYear(), dueBase.getMonth(), due);
+    return `${dueBase.getFullYear()}-${String(dueBase.getMonth()+1).padStart(2,"0")}-${String(safeDay).padStart(2,"0")}`;
+  }
+
+  function cardInvoiceForCompetence(cardName, comp = selectedCompetence) {
+    const billsTotal = bills
+      .filter(b => b.cardName === cardName && competenceFromDate(b.dueDate) === comp)
+      .reduce((s,b)=>s+Number(b.value||0),0);
+
+    // Compatibilidade com lançamentos antigos feitos diretamente no cartão.
+    const legacyDirect = transactions
+      .filter(t => t.type === "expense" && !t.billId && t.cardName === cardName && competenceFromDate(t.date) === comp && !t.installmentGroupId)
+      .reduce((s,t)=>s+Number(t.value||0),0);
+
+    return billsTotal + legacyDirect;
+  }
+
+  window.addCardPurchase = async () => {
+    const desc = $("cardPurchaseDesc").value.trim();
+    const cardName = $("cardPurchaseCard").value;
+    const total = Number($("cardPurchaseTotal").value || 0);
+    const installments = Math.max(1, Number($("cardPurchaseInstallments").value || 1));
+    const purchaseDate = $("cardPurchaseDate").value || new Date().toISOString().slice(0,10);
+    const accountId = $("cardPurchaseAccount").value || "";
+    const card = getCardByName(cardName);
+
+    if (!desc || !cardName || total <= 0 || !card) return alert("Preencha descrição, cartão e valor total.");
+    if (installments > 60) return alert("Use no máximo 60 parcelas.");
+
+    const firstDue = firstInvoiceDueDate(card, purchaseDate);
+    const groupId = `card-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+    const base = Math.floor((total / installments) * 100) / 100;
+    let accumulated = 0;
+
+    for (let i=1;i<=installments;i++) {
+      const value = i === installments ? Math.round((total - accumulated)*100)/100 : base;
+      accumulated += value;
+      const dueDate = addMonthsToDate(firstDue, i-1);
+      await addDoc(collection(db,"bills"), {
+        userId:currentUser.uid, workspaceId:currentWorkspaceId,
+        desc, value, dueDate, competence:competenceFromDate(dueDate),
+        type:"payable",status:"pending",category:"Cartão",
+        sourceAccount:card.sourceAccount || "salary1",
+        accountId:accountId || "",
+        cardName,
+        installmentCurrent:i,installmentTotal:installments,
+        installmentGroupId:groupId,purchaseDate,
+        createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+      });
+    }
+
+    $("cardPurchaseDesc").value = "";
+    $("cardPurchaseTotal").value = "";
+    $("cardPurchaseInstallments").value = "1";
+    alert(`${installments} parcela(s) criada(s) nas faturas corretas.`);
+  };
 
   window.addCreditCard = async () => {
     const name = $("creditCardName").value.trim();
@@ -2735,7 +3402,7 @@
 
     const registeredHtml = creditCards.map(c => {
       const due = daysUntilDayOfMonth(c.dueDay);
-      const invoice = cardInvoiceTotal(c.name) + Number(c.used || 0);
+      const invoice = cardInvoiceForCompetence(c.name) + Number(c.used || 0);
       const available = Number(c.limit || 0) - invoice;
       const alertClass = due !== null && due <= 3 ? "card-alert" : "credit-card-box";
 
@@ -2743,7 +3410,7 @@
         <div>
           <strong>💳 ${escapeHtml(c.name)}</strong><br>
           <small>Fecha dia ${c.closingDay} • Vence dia ${c.dueDay} • ${sourceLabel(c.sourceAccount)}</small>
-          <div class="card-limit">Fatura prevista: <strong>${money(invoice)}</strong> • Limite disponível: <strong>${money(available)}</strong></div>
+          <div class="card-limit">Fatura de ${escapeHtml(selectedCompetenceLabel())}: <strong>${money(invoice)}</strong> • Limite disponível: <strong>${money(available)}</strong></div>
           <div class="card-limit">${due === 0 ? "Vence hoje" : "Vence em " + due + " dia(s)"}</div>
         </div>
         <div class="actions">
@@ -2755,7 +3422,7 @@
     const inferredHtml = cardNames
       .filter(name => !creditCards.some(c => c.name === name))
       .map(name => {
-        const invoice = inferredCardInvoiceTotal(name);
+        const invoice = cardInvoiceForCompetence(name);
         return `<div class="item credit-card-box">
           <div>
             <strong>💳 ${escapeHtml(name)}</strong><br>
@@ -2768,6 +3435,7 @@
 
     list.className = "";
     list.innerHTML = registeredHtml + inferredHtml;
+    populateAccountSelects();
   }
 
 
@@ -2779,11 +3447,13 @@
     const status = $("billStatus").value;
     const category = getSelectedCategory("billCategory","billCustomCategory");
     const sourceAccount = $("billSource")?.value || "salary1";
+    const accountId = $("billAccountId")?.value || "";
     const cardName = isCardCategory(category) ? getSelectedCardName("billCardName", "billCustomCardName") : "";
     const installmentCurrent = isCardCategory(category) ? Number($("billInstallmentCurrent")?.value || 0) : 0;
     const installmentTotal = isCardCategory(category) ? Number($("billInstallmentTotal")?.value || 0) : 0;
 
     if (!desc || value <= 0 || !dueDate) return alert("Preencha descrição, valor e vencimento.");
+    if (!ensureCompetenceOpen(dueDate)) return;
     if (isCardCategory(category) && !cardName) return alert("Selecione qual cartão será usado.");
     if (isCardCategory(category) && !validateInstallments(installmentCurrent, installmentTotal)) {
       return alert("Confira as parcelas do cartão. A parcela atual não pode ser maior que o total.");
@@ -2792,7 +3462,7 @@
     const payload = {
       userId: currentUser.uid,
       workspaceId: currentWorkspaceId,
-      desc, value, dueDate, type, status, category, sourceAccount, cardName, installmentCurrent, installmentTotal,
+      desc, value, dueDate, type, status, category, sourceAccount, accountId, cardName, installmentCurrent, installmentTotal,
       updatedAt: serverTimestamp()
     };
 
@@ -2850,6 +3520,7 @@
       toggleCustomCategory("billCategory","billCustomCategory");
     }
     $("billSource").value = b.sourceAccount || "salary1";
+    if ($("billAccountId")) $("billAccountId").value = b.accountId || "";
     toggleBillCardFields();
     if ($("billCardName")) {
       const exists = Array.from($("billCardName").options).some(o => o.value === (b.cardName || ""));
@@ -2923,36 +3594,59 @@
   window.renderSalarySummary = () => {
     if (!$("salaryFilter")) return;
     const selected = $("salaryFilter").value;
+    const isReserve = selected === "reserve_emergency";
 
-    const income = getSalaryBase(selected);
+    const base = getSalaryBase(selected);
 
-    const expense = transactions
+    // Salário: despesas pagas do mês reduzem o valor-base.
+    // Reserva: o saldo atual já foi reduzido no Firebase ao pagar,
+    // portanto NÃO descontamos novamente a transação gerada.
+    const expense = isReserve ? 0 : currentMonthTransactions()
       .filter(t => t.sourceAccount === selected && t.type === "expense")
       .reduce((s,t)=>s+Number(t.value||0),0);
 
+    // Pendências vencidas + que vencem até o fim do mês.
     const payables = bills
-      .filter(b => b.sourceAccount === selected && b.status !== "paid" && b.type === "payable")
+      .filter(b =>
+        b.sourceAccount === selected &&
+        b.status !== "paid" &&
+        b.type === "payable" &&
+        isDueThroughCurrentMonth(b.dueDate)
+      )
       .reduce((s,b)=>s+Number(b.value||0),0);
 
     const receivables = bills
-      .filter(b => b.sourceAccount === selected && b.status !== "paid" && b.type === "receivable")
+      .filter(b =>
+        b.sourceAccount === selected &&
+        b.status !== "paid" &&
+        b.type === "receivable" &&
+        isDueThroughCurrentMonth(b.dueDate)
+      )
       .reduce((s,b)=>s+Number(b.value||0),0);
 
-    const left = income - expense + receivables - payables;
+    const left = base - expense + receivables - payables;
 
-    $("salaryIncomeView").textContent = money(income);
+    $("salaryIncomeView").textContent = money(base);
     $("salaryExpenseView").textContent = money(expense);
     $("salaryBillsView").textContent = money(payables);
     $("salaryLeftView").textContent = money(left);
     $("salaryLeftView").className = left >= 0 ? "positive" : "negative";
 
-    const items = [
-      ...bills.filter(b => b.sourceAccount === selected && b.status !== "paid").map(b => ({
+    const monthItems = [
+      ...bills.filter(b =>
+        b.sourceAccount === selected &&
+        b.status !== "paid" &&
+        isDueThroughCurrentMonth(b.dueDate)
+      ).map(b => ({
         title: b.desc,
         subtitle: `${formatDate(b.dueDate)} • ${b.type === "payable" ? "A pagar" : "A receber"} • ${b.category}${b.cardName ? " • " + b.cardName : ""}`,
         value: b.type === "payable" ? -Number(b.value||0) : Number(b.value||0)
       })),
-      ...transactions.filter(t => t.sourceAccount === selected && t.type !== "income").map(t => ({
+      ...currentMonthTransactions().filter(t =>
+        t.sourceAccount === selected &&
+        t.type !== "income" &&
+        !(isReserve && t.type === "expense")
+      ).map(t => ({
         title: t.desc,
         subtitle: `${formatDate(t.date)} • ${t.type === "expense" ? "Saída" : "Entrada"} • ${t.category}${t.cardName ? " • " + t.cardName : ""}`,
         value: t.type === "expense" ? -Number(t.value||0) : Number(t.value||0)
@@ -2960,14 +3654,14 @@
     ];
 
     const list = $("salaryItemsList");
-    if (!items.length) {
+    if (!monthItems.length) {
       list.className = "empty";
-      list.innerHTML = "Nenhum item encontrado.";
+      list.innerHTML = "Nenhum item deste mês encontrado.";
       return;
     }
 
     list.className = "";
-    list.innerHTML = items.map(i => `
+    list.innerHTML = monthItems.map(i => `
       <div class="item">
         <div><strong>${escapeHtml(i.title)}</strong><br><small>${escapeHtml(i.subtitle)}</small></div>
         <strong class="${i.value >= 0 ? "positive" : "negative"}">${money(Math.abs(i.value))}</strong>
@@ -3054,6 +3748,7 @@
   window.markBillPaid = async (id) => {
     const bill = bills.find(b => b.id === id);
     if (!bill) return;
+    if (!ensureCompetenceOpen(bill.dueDate || selectedCompetence)) return;
 
     if (bill.status === "paid") {
       alert("Essa conta já foi baixada.");
@@ -3072,6 +3767,7 @@
       type: transactionType,
       category: bill.category || "Outros",
       sourceAccount: bill.sourceAccount || "salary1",
+      accountId: bill.accountId || "",
       cardName: bill.cardName || "",
       installmentCurrent: bill.installmentCurrent || 0,
       installmentTotal: bill.installmentTotal || 0,
@@ -3093,6 +3789,8 @@
   };
 
   window.removeBill = async (id) => {
+    const b = bills.find(x => x.id === id);
+    if (b && !ensureCompetenceOpen(b.dueDate || selectedCompetence)) return;
     if (confirm("Excluir esta conta?")) await deleteDoc(doc(db, "bills", id));
   };
 
@@ -3100,14 +3798,15 @@
     const list = $("billsList");
     if (!list) return;
 
-    if (!bills.length) {
+    const periodBills = bills.filter(b => competenceFromDate(b.dueDate) === selectedCompetence);
+    if (!periodBills.length) {
       list.className = "empty";
-      list.innerHTML = "Nenhuma conta cadastrada.";
+      list.innerHTML = `Nenhuma conta em ${selectedCompetenceLabel()}.`;
       return;
     }
 
     list.className = "";
-    list.innerHTML = bills.map(b => {
+    list.innerHTML = periodBills.map(b => {
       const d = daysUntil(b.dueDate);
       let msg = b.status === "paid" ? "Pago/Recebido" : d < 0 ? `Vencida há ${Math.abs(d)} dia(s)` : d === 0 ? "Vence hoje" : `Vence em ${d} dia(s)`;
       return `<div class="item ${getBillClass(b)}">
@@ -3118,6 +3817,7 @@
             <span class="meta-chip">${b.type === "payable" ? "A pagar" : "A receber"}</span>
             <span class="meta-chip">${escapeHtml(b.category)}</span>
             <span class="meta-chip">${sourceLabel(b.sourceAccount)}</span>
+            ${b.accountId ? `<span class="meta-chip">🏛️ ${escapeHtml(bankAccounts.find(a=>a.id===b.accountId)?.name || "Conta")}</span>` : ""}
             ${b.cardName ? `<span class="meta-chip">${escapeHtml(b.cardName)}</span>` : ""}
             ${installmentText(b.installmentCurrent, b.installmentTotal) ? `<span class="meta-chip">Parcela ${installmentText(b.installmentCurrent, b.installmentTotal)}</span>` : ""}
             ${b.reserveDeducted ? '<span class="meta-chip good">Descontado da reserva</span>' : ""}
@@ -3259,7 +3959,7 @@
   function renderReports() {
     const byCatIncome = {};
     const byCatExpense = {};
-    transactions.forEach(t => {
+    currentMonthTransactions().forEach(t => {
       const obj = t.type === "income" ? byCatIncome : byCatExpense;
       obj[t.category] = (obj[t.category] || 0) + Number(t.value || 0);
     });

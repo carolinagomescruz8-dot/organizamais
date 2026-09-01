@@ -661,12 +661,116 @@
   }
 </style>
 
+
+<style id="organizamais-v5-1-updates">
+  .nav-new-dot{display:inline-block;width:7px;height:7px;margin-left:5px;border-radius:50%;background:#5eead4;box-shadow:0 0 0 3px rgba(94,234,212,.13)}
+  .updates-hero{display:flex;justify-content:space-between;align-items:center;gap:20px}
+  .updates-hero .eyebrow{display:block;margin-bottom:7px;font-size:10px;font-weight:900;letter-spacing:1.3px;opacity:.75}
+  .version-pill{white-space:nowrap;padding:12px 15px;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);font-size:12px}
+  .version-pill strong{display:block;font-size:20px;margin-top:2px}
+  .updates-layout{display:grid;grid-template-columns:1.35fr .85fr;gap:18px;margin-top:18px}
+  .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+  .section-head small{font-weight:900;letter-spacing:.8px;color:var(--om-muted)}
+  .timeline{position:relative;margin-top:10px}
+  .timeline:before{content:"";position:absolute;left:18px;top:12px;bottom:12px;width:2px;background:var(--om-border)}
+  .timeline-item{position:relative;display:grid;grid-template-columns:38px 1fr;gap:12px;padding:10px 0}
+  .timeline-icon{position:relative;z-index:1;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--om-surface-2);border:1px solid var(--om-border)}
+  .timeline-item strong{font-size:13px}
+  .timeline-item p,.roadmap-card p,.release-note p{margin:4px 0 0;color:var(--om-muted);font-size:12px;line-height:1.55}
+  .roadmap-card{padding:14px 0;border-bottom:1px solid var(--om-border)}
+  .roadmap-card:last-child{border-bottom:0}
+  .roadmap-card strong{display:block;margin-top:8px;font-size:13px}
+  .roadmap-status{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}
+  .roadmap-status.next{background:#ecfdf5;color:#047857}
+  .roadmap-status.planned{background:#eef2ff;color:#4338ca}
+  .roadmap-status.research{background:#fff7ed;color:#c2410c}
+  .release-note{padding:12px 0;border-bottom:1px solid var(--om-border)}
+  .release-note:last-child{border-bottom:0}
+  .release-note summary{cursor:pointer;font-size:12px}
+  @media(max-width:900px){
+    .updates-layout{grid-template-columns:1fr}
+    .updates-hero{align-items:flex-start;flex-direction:column}
+  }
+</style>
+
+
+<style id="organizamais-v6-premium">
+  :root{
+    --om-bg:#080d12;--om-sidebar:#090e13;--om-surface:#10161c;--om-surface-2:#151c23;
+    --om-border:#232c35;--om-text:#f7f8fa;--om-muted:#8e9aa7;
+    --om-primary:#ff6508;--om-primary-2:#ff8a00;--om-good:#47c763;--om-danger:#ff4d38;
+    --om-shadow:0 18px 50px rgba(0,0,0,.24)
+  }
+  html,body{background:var(--om-bg)!important;color:var(--om-text)!important}
+  body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+  .sidebar{background:linear-gradient(180deg,#080d12,#0a1016)!important;border-right:1px solid #1c252e!important}
+  .main{background:
+    radial-gradient(circle at 48% -10%,rgba(255,101,8,.045),transparent 31rem),
+    #0a0f14!important}
+  .topbar{background:rgba(8,13,18,.9)!important;border-bottom:1px solid #1d252d!important;backdrop-filter:blur(18px)}
+  .brand-icon,.logo-icon{
+    width:40px!important;height:40px!important;border-radius:12px!important;
+    background:linear-gradient(135deg,#ff7a00,#e94308)!important;color:#111!important;
+    font-size:13px!important;font-weight:1000!important;letter-spacing:-1.2px!important;
+    box-shadow:0 10px 28px rgba(255,101,8,.2)!important
+  }
+  .brand-text span,.logo-text span{color:#ff6508!important}
+  .nav button{color:#c7cdd4!important;border:1px solid transparent!important}
+  .nav button:hover{background:#131a20!important;color:#fff!important}
+  .nav button.active{background:linear-gradient(90deg,#ff5c00,#ff7900)!important;color:#fff!important;box-shadow:0 9px 25px rgba(255,92,0,.18)}
+  .nav-badge{margin-left:auto;padding:3px 6px;border-radius:999px;background:#5b2b0b;color:#ff9b42;font-size:8px;font-weight:900}
+  .nav-badge.beta{background:#31145b;color:#c084fc}
+  .box,.kpi,.premium-card,.account-card,.executive-card{
+    background:linear-gradient(145deg,#11171d,#0e1419)!important;
+    border:1px solid #222c34!important;color:#f7f8fa!important;
+    box-shadow:0 12px 32px rgba(0,0,0,.12)!important
+  }
+  .box h3,.kpi strong,.premium-card strong{color:#f8fafc!important}
+  .muted,small,.box p{color:#8e9aa7}
+  input,select,textarea{
+    background:#0c1217!important;border:1px solid #29333d!important;color:#f8fafc!important;
+    box-shadow:none!important
+  }
+  input:focus,select:focus,textarea:focus{border-color:#ff6508!important;box-shadow:0 0 0 3px rgba(255,101,8,.1)!important}
+  .btn.green,.quick-top-btn{background:linear-gradient(135deg,#ff5c00,#ff7900)!important;color:white!important;border:0!important}
+  .btn.light{background:#151c23!important;color:#e5e7eb!important;border:1px solid #29333d!important}
+  .trial-banner{background:linear-gradient(120deg,#161d23,#11171d 60%,#2b1609)!important;border:1px solid #2b333b!important;color:#fff!important}
+  .trial-banner p{color:#9ca7b2!important}
+  .sync-status{background:#10171d!important;border-color:#26313a!important;color:#9ca7b2!important}
+  .competence-control{background:#0e151a!important;border-color:#28323b!important}
+  .competence-btn{background:#171e24!important;color:#e5e7eb!important}
+  .executive-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 18px}
+  .executive-card{padding:18px;border-radius:16px}
+  .executive-card.featured{border-color:rgba(255,101,8,.38)!important;background:linear-gradient(145deg,#171710,#11171d)!important}
+  .executive-card strong{display:block;margin:8px 0 3px;font-size:24px;letter-spacing:-.7px;color:#fff}
+  .executive-card.featured strong{color:#65d46e}
+  .executive-label{font-size:11px;font-weight:800;color:#d7dce1}
+  .positive{color:#55cf6a!important}.negative{color:#ff5642!important}
+  .meta-chip{background:#171f26!important;border:1px solid #29343d!important;color:#b9c2ca!important}
+  .meta-chip.good{background:rgba(55,199,99,.1)!important;color:#65d878!important;border-color:rgba(55,199,99,.2)!important}
+  .updates-hero,.ai-hero,.dark-feature{background:linear-gradient(120deg,#11181e,#11171d 62%,#351807)!important}
+  .timeline-icon{background:#141c22!important;border-color:#27323b!important}
+  .roadmap-status.next{background:rgba(255,101,8,.12)!important;color:#ff8b3d!important}
+  .roadmap-status.planned{background:rgba(75,111,255,.12)!important;color:#8aa2ff!important}
+  .roadmap-status.research{background:rgba(192,132,252,.1)!important;color:#c084fc!important}
+  .ai-question{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 14px;border-radius:12px;background:#151d23;color:#e5e7eb;border:1px solid #27323b;font-weight:750}
+  .ai-question:hover{border-color:#ff6508;color:#fff}
+  .ai-answer{margin-top:14px;padding:15px;border-radius:14px;background:#0b1116;border:1px solid #263039;color:#d5dbe1;font-size:12px;line-height:1.6}
+  .decision-list .decision{padding:13px 0;border-bottom:1px solid #202a32}
+  .decision-list .decision:last-child{border-bottom:0}
+  .decision strong{display:block;font-size:12px;margin-bottom:3px}.decision p{margin:0;font-size:11px;color:#8e9aa7}
+  #dashboardView::before{background:#11181e!important;border-color:#242e37!important;color:#8e9aa7!important}
+  ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#29333c;border-radius:999px}::-webkit-scrollbar-track{background:#0a0f14}
+  @media(max-width:1150px){.executive-kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:650px){.executive-kpis{grid-template-columns:1fr}}
+</style>
+
 </head>
 <body>
 
 <section id="authScreen" class="auth">
   <div class="auth-left">
-    <div class="brand-wrap"><div class="brand-icon">+</div><div class="brand-text">Organiza<span>Mais</span></div></div>
+    <div class="brand-wrap"><div class="brand-icon">OM</div><div class="brand-text">Organiza<span>Mais</span></div></div>
     <h2>Controle financeiro pessoal e empresarial em uma única plataforma.</h2>
     <p>Crie ambientes separados para sua vida pessoal, empresa, projetos, negócios e acompanhe tudo com clareza.</p>
     <div class="features">
@@ -679,7 +783,7 @@
 
   <div class="auth-right">
     <div class="card">
-      <div class="brand-wrap"><div class="brand-icon">+</div><div class="brand-text">Organiza<span>Mais</span></div></div>
+      <div class="brand-wrap"><div class="brand-icon">OM</div><div class="brand-text">Organiza<span>Mais</span></div></div>
 
       <div id="loginBox">
         <h3>Entrar</h3>
@@ -744,7 +848,7 @@
 <section id="appScreen" class="app hidden">
   <aside id="appSidebar">
     <div class="brand-wrap">
-      <div class="brand-icon">+</div>
+      <div class="brand-icon">OM</div>
       <div class="brand-text">Organiza<span>Mais</span></div>
     </div>
     <div class="userbox">
@@ -1491,6 +1595,165 @@
       </div>
     </section>
 
+
+
+
+
+    <section id="aiView" class="hidden">
+      <div class="trial-banner ai-hero">
+        <div>
+          <span class="eyebrow">ORGANIZA IA • BETA</span>
+          <h2>✦ Seu copiloto financeiro</h2>
+          <p>Análises automáticas baseadas nos dados cadastrados no OrganizaMais.</p>
+        </div>
+      </div>
+      <div class="layout" style="margin-top:18px">
+        <div class="box">
+          <h3>Resumo inteligente</h3>
+          <div id="aiExecutiveSummary" class="decision-list"></div>
+        </div>
+        <div class="box">
+          <h3>Perguntas rápidas</h3>
+          <button class="ai-question" onclick="runAIQuestion('free')">Quanto tenho realmente livre?</button>
+          <button class="ai-question" onclick="runAIQuestion('risk')">Tenho risco de ficar negativo?</button>
+          <button class="ai-question" onclick="runAIQuestion('save')">Quanto consegui poupar?</button>
+          <button class="ai-question" onclick="runAIQuestion('priority')">O que devo priorizar agora?</button>
+          <div id="aiAnswer" class="ai-answer">Escolha uma pergunta para analisar seus dados.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="planningView" class="hidden">
+      <div class="trial-banner dark-feature">
+        <div>
+          <span class="eyebrow">PLANEJAMENTO FINANCEIRO</span>
+          <h2>🧭 Central de Decisões</h2>
+          <p>Transforme os seus números em decisões: quanto está livre, o que está comprometido e onde agir primeiro.</p>
+        </div>
+      </div>
+      <div class="executive-kpis" style="margin-top:18px">
+        <div class="executive-card featured"><div class="executive-label">Dinheiro Livre</div><strong id="planningFreeMoney">R$ 0,00</strong><small>Após compromissos da competência</small></div>
+        <div class="executive-card"><div class="executive-label">Contas pendentes</div><strong id="planningPending">R$ 0,00</strong><small>A pagar até o fim da competência</small></div>
+        <div class="executive-card"><div class="executive-label">Faturas</div><strong id="planningCards">R$ 0,00</strong><small>Cartões na competência</small></div>
+        <div class="executive-card"><div class="executive-label">Reserva</div><strong id="planningReserve">R$ 0,00</strong><small>Total disponível em reservas</small></div>
+      </div>
+      <div class="updates-layout">
+        <div class="box">
+          <h3>📈 Previsão financeira</h3>
+          <div id="planningForecast" class="decision-list"></div>
+        </div>
+        <div class="box">
+          <h3>⚡ Prioridades agora</h3>
+          <div id="decisionCenter" class="decision-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="updatesView" class="hidden">
+      <div class="trial-banner updates-hero">
+        <div>
+          <span class="eyebrow">ORGANIZAMAIS • EVOLUÇÃO CONTÍNUA</span>
+          <h2>🛡️ Atualizações e atualizações</h2>
+          <p>Acompanhe o que mudou, o que foi corrigido e o que está sendo preparado para as próximas versões.</p>
+        </div>
+        <div class="version-pill">Versão atual <strong>V6.0</strong></div>
+      </div>
+
+      <div class="updates-layout">
+        <div class="box">
+          <div class="section-head">
+            <div>
+              <small>VERSÃO ATUAL</small>
+              <h3>V6.0 • Setembro/2026</h3>
+            </div>
+            <span class="meta-chip good">Mais recente</span>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <span class="timeline-icon">🎨</span>
+              <div><strong>Nova identidade premium</strong><p>OrganizaMais redesenhado em grafite/preto e laranja, com nova assinatura visual OM.</p></div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-icon">💰</span>
+              <div><strong>Dinheiro Livre</strong><p>Novo indicador que desconta compromissos e mostra quanto está realmente disponível para decisão.</p></div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-icon">🧭</span>
+              <div><strong>Central de Decisões</strong><p>Planejamento reúne margem livre, compromissos, faturas, reservas e prioridades financeiras.</p></div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-icon">✦</span>
+              <div><strong>Organiza IA Beta</strong><p>Respostas contextuais baseadas nos dados financeiros já registrados no sistema.</p></div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-icon">✨</span>
+              <div><strong>Central de Atualizações</strong><p>Área oficial para acompanhar melhorias, correções e próximos recursos do OrganizaMais.</p></div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-icon">📅</span>
+              <div><strong>Competência mensal</strong><p>Agora é possível navegar por mês/ano, fechar uma competência e reabri-la quando necessário.</p></div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-icon">🏛️</span>
+              <div><strong>Contas bancárias e transferências</strong><p>Saldo por conta e transferências internas sem criar receitas ou despesas falsas.</p></div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-icon">💳</span>
+              <div><strong>Cartão por ciclo de fatura</strong><p>Compras parceladas passam a gerar parcelas futuras considerando fechamento e vencimento do cartão.</p></div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-icon">🔁</span>
+              <div><strong>Recorrências</strong><p>Contas mensais podem ser cadastradas uma vez e geradas na competência correta sem duplicação.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="box">
+          <h3>🚀 Próximas evoluções</h3>
+          <div class="roadmap-card">
+            <span class="roadmap-status next">Próxima etapa</span>
+            <strong>Orçamento inteligente por categoria</strong>
+            <p>Limites mensais, consumo em tempo real, previsão de estouro e comparação com meses anteriores.</p>
+          </div>
+          <div class="roadmap-card">
+            <span class="roadmap-status planned">Planejado</span>
+            <strong>Conciliação bancária</strong>
+            <p>Importação de OFX/CSV, identificação de duplicidades e conferência entre banco e OrganizaMais.</p>
+          </div>
+          <div class="roadmap-card">
+            <span class="roadmap-status planned">Planejado</span>
+            <strong>Previsão financeira 30/60/90 dias</strong>
+            <p>Projeção diária de caixa, contas, faturas e recebimentos com identificação antecipada de saldo negativo.</p>
+          </div>
+          <div class="roadmap-card">
+            <span class="roadmap-status research">Em estudo</span>
+            <strong>Organiza IA</strong>
+            <p>Assistente financeiro contextual para explicar gastos, detectar anomalias, simular decisões e criar planos de ação.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box" style="margin-top:18px">
+        <div class="section-head">
+          <div>
+            <small>HISTÓRICO</small>
+            <h3>Versões anteriores</h3>
+          </div>
+        </div>
+        <details class="release-note" open>
+          <summary><strong>V5.0</strong> • Base financeira estruturada</summary>
+          <p>Competência mensal, fechamento, contas bancárias, transferências, parcelamento automático e recorrências.</p>
+        </details>
+        <details class="release-note">
+          <summary><strong>V4.2</strong> • Motor de cálculos conectado</summary>
+          <p>Unificação das regras de receitas, despesas, previsão, salários, reserva, cartões, score e relatórios.</p>
+        </details>
+        <details class="release-note">
+          <summary><strong>V4.1</strong> • Migração para GitHub Pages</summary>
+          <p>Remoção das referências ao Netlify, correção dos retornos de autenticação e refinamento do login.</p>
+        </details>
+      </div>
+    </section>
 
     <section id="helpView" class="hidden">
       <div class="trial-banner">
@@ -2359,11 +2622,11 @@
   }
 
   window.setView = (view) => {
-    ["dashboard","transactions","accounts","goals","reserves","investments","bills","recurring","salaries","cards","loans","workspaces","reports","calendar","help","subscription","settings","admin"].forEach(v => {
+    ["dashboard","transactions","accounts","goals","reserves","investments","bills","recurring","salaries","cards","loans","workspaces","reports","calendar","planning","ai","updates","help","subscription","settings","admin"].forEach(v => {
       $(v+"View").classList.toggle("hidden", v !== view);
       $("nav"+capitalize(v)).classList.toggle("active", v === view);
     });
-    const titles = {dashboard:"Dashboard",transactions:"Lançamentos",accounts:"Contas bancárias",goals:"Metas",reserves:"Reservas",investments:"Investimentos",bills:"Contas",recurring:"Recorrências",salaries:"Salários",cards:"Cartões",loans:"Empréstimos",workspaces:"Ambientes",reports:"Relatórios",calendar:"Calendário",help:"Como funciona",subscription:"Assinatura",settings:"Configurações",admin:"Administração"};
+    const titles = {dashboard:"Dashboard",transactions:"Lançamentos",accounts:"Contas bancárias",goals:"Metas",reserves:"Reservas",investments:"Investimentos",bills:"Contas",recurring:"Recorrências",salaries:"Salários",cards:"Cartões",loans:"Empréstimos",workspaces:"Ambientes",reports:"Relatórios",calendar:"Calendário",planning:"Planejamento",ai:"Organiza IA",updates:"Atualizações",help:"Como funciona",subscription:"Assinatura",settings:"Configurações",admin:"Administração"};
     $("pageTitle").textContent = titles[view];
   };
 
@@ -2867,8 +3130,97 @@
   }
 
 
+
+  function totalBankBalance() {
+    return bankAccounts.reduce((sum,a)=>sum+accountBalance(a),0);
+  }
+
+  function competenceCardTotal() {
+    const names = getAllCardNames();
+    return names.reduce((s,name)=>s+cardInvoiceForCompetence(name),0) +
+      creditCards.reduce((s,c)=>s+Number(c.used||0),0);
+  }
+
+  function executiveMetrics() {
+    const bank = totalBankBalance();
+    const pending = bills
+      .filter(b=>b.status!=="paid" && b.type==="payable" && competenceFromDate(b.dueDate)===selectedCompetence)
+      .reduce((s,b)=>s+Number(b.value||0),0);
+    const cards = competenceCardTotal();
+    // Card bills are already bills. Avoid double counting cards already represented as bills.
+    const nonCardPending = bills
+      .filter(b=>b.status!=="paid" && b.type==="payable" && !b.cardName && competenceFromDate(b.dueDate)===selectedCompetence)
+      .reduce((s,b)=>s+Number(b.value||0),0);
+    const committed = nonCardPending + cards;
+    const receivable = bills
+      .filter(b=>b.status!=="paid" && b.type==="receivable" && competenceFromDate(b.dueDate)===selectedCompetence)
+      .reduce((s,b)=>s+Number(b.value||0),0);
+    const free = bank + receivable - committed;
+    const income = currentMonthIncome();
+    const expense = currentMonthExpense();
+    const savingsRate = income > 0 ? ((income-expense)/income)*100 : 0;
+    const reserve = reserves.reduce((s,r)=>s+Number(r.current||0),0);
+    return {bank,pending,cards,committed,receivable,free,income,expense,savingsRate,reserve};
+  }
+
+  function updateExecutiveDashboard() {
+    const m = executiveMetrics();
+    if ($("freeMoneyView")) {
+      $("freeMoneyView").textContent = money(m.free);
+      $("freeMoneyView").className = m.free>=0?"positive":"negative";
+    }
+    if ($("bankBalanceView")) $("bankBalanceView").textContent = money(m.bank);
+    if ($("committedView")) $("committedView").textContent = money(m.committed);
+    if ($("savingsRateView")) {
+      $("savingsRateView").textContent = `${m.savingsRate.toFixed(1)}%`;
+      $("savingsRateView").className = m.savingsRate>=0?"positive":"negative";
+    }
+    if ($("planningFreeMoney")) $("planningFreeMoney").textContent = money(m.free);
+    if ($("planningPending")) $("planningPending").textContent = money(m.pending);
+    if ($("planningCards")) $("planningCards").textContent = money(m.cards);
+    if ($("planningReserve")) $("planningReserve").textContent = money(m.reserve);
+
+    const decisions = [];
+    if (m.free < 0) decisions.push({title:"Atenção: dinheiro livre negativo",text:`Os compromissos superam os recursos disponíveis em ${money(Math.abs(m.free))}. Priorize vencimentos e reduza novas despesas.`});
+    else decisions.push({title:"Dinheiro livre positivo",text:`Após os compromissos da competência, permanecem ${money(m.free)} livres.`});
+    if (m.cards > m.income*0.35 && m.income>0) decisions.push({title:"Faturas exigem atenção",text:`As faturas representam ${((m.cards/m.income)*100).toFixed(0)}% das receitas realizadas da competência.`});
+    if (m.savingsRate < 10 && m.income>0) decisions.push({title:"Taxa de poupança baixa",text:`A taxa atual é ${m.savingsRate.toFixed(1)}%. O sistema recomenda aumentar a margem entre receitas e despesas.`});
+    if (m.reserve <= 0) decisions.push({title:"Reserva ainda não formada",text:"Cadastre ou alimente uma reserva para aumentar a proteção contra imprevistos."});
+
+    const dc = $("decisionCenter");
+    if (dc) dc.innerHTML = decisions.map(d=>`<div class="decision"><strong>${escapeHtml(d.title)}</strong><p>${escapeHtml(d.text)}</p></div>`).join("");
+
+    const forecast = $("planningForecast");
+    if (forecast) {
+      const projected = currentMonthProjectedResult();
+      forecast.innerHTML = `
+        <div class="decision"><strong>Resultado realizado</strong><p>${money(currentMonthResult())} na competência selecionada.</p></div>
+        <div class="decision"><strong>Resultado projetado</strong><p>${money(projected)} considerando contas abertas até o fim da competência.</p></div>
+        <div class="decision"><strong>Recursos bancários</strong><p>${money(m.bank)} distribuídos nas contas cadastradas.</p></div>`;
+    }
+
+    const summary = $("aiExecutiveSummary");
+    if (summary) summary.innerHTML = decisions.slice(0,4).map(d=>`<div class="decision"><strong>${escapeHtml(d.title)}</strong><p>${escapeHtml(d.text)}</p></div>`).join("");
+  }
+
+  window.runAIQuestion = (kind) => {
+    const m = executiveMetrics();
+    let answer = "";
+    if (kind==="free") answer = `Seu dinheiro livre estimado é ${money(m.free)}. O cálculo considera ${money(m.bank)} em contas, ${money(m.receivable)} a receber e ${money(m.committed)} já comprometidos.`;
+    if (kind==="risk") answer = m.free < 0 ? `Sim. Há um déficit estimado de ${money(Math.abs(m.free))} após os compromissos da competência.` : `Pelos dados cadastrados, não há déficit na competência: a margem estimada é ${money(m.free)}.`;
+    if (kind==="save") answer = m.income > 0 ? `Sua taxa de poupança realizada é ${m.savingsRate.toFixed(1)}%, com resultado de ${money(m.income-m.expense)} sobre ${money(m.income)} de receitas.` : "Ainda não há receitas realizadas suficientes nesta competência para calcular a taxa de poupança.";
+    if (kind==="priority") {
+      if (m.free < 0) answer = "Prioridade: reduzir ou renegociar compromissos da competência, pois o dinheiro livre está negativo.";
+      else if (m.cards > m.income*.35 && m.income>0) answer = "Prioridade: controlar as faturas de cartão, pois elas estão consumindo uma parcela relevante das receitas.";
+      else if (m.reserve <= 0) answer = "Prioridade: começar a formar uma reserva financeira.";
+      else answer = "Os principais indicadores estão equilibrados. O próximo passo é aumentar a taxa de poupança e direcionar o excedente para metas e investimentos.";
+    }
+    if ($("aiAnswer")) $("aiAnswer").textContent = answer;
+  };
+
   function updateDashboard() {
     renderCompetenceState();
+    updateExecutiveDashboard();
     const monthTx = currentMonthTransactions();
     const income = sumValues(monthTx.filter(t=>t.type==="income"));
     const expense = sumValues(monthTx.filter(t=>t.type==="expense"));

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0b1220"/>
   <title>OrganizaMais | Plataforma Financeira</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Arial,Helvetica,sans-serif}
@@ -209,18 +210,399 @@
     }
   });
 </script>
+<style id="organizamais-v4-ui">
+  :root{
+    --om-bg:#f4f7fb;
+    --om-surface:#ffffff;
+    --om-surface-2:#f8fafc;
+    --om-text:#142033;
+    --om-muted:#64748b;
+    --om-border:#e5eaf1;
+    --om-primary:#2563eb;
+    --om-primary-2:#4f46e5;
+    --om-green:#10b981;
+    --om-red:#ef4444;
+    --om-orange:#f59e0b;
+    --om-sidebar:#0b1220;
+    --om-sidebar-2:#111c31;
+    --om-shadow:0 12px 36px rgba(15,23,42,.07);
+    --om-shadow-hover:0 18px 42px rgba(15,23,42,.12);
+    --om-radius:22px;
+  }
 
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(circle at 85% 0%, rgba(37,99,235,.08), transparent 24rem),
+      var(--om-bg);
+    color:var(--om-text);
+  }
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    if (window.location.protocol === "file:") {
-      const warning = document.createElement("div");
-      warning.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:#fff7ed;color:#9a3412;padding:12px 18px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.15);font-weight:700;max-width:90%;text-align:center";
-      warning.textContent = "Você está abrindo o arquivo localmente. Para sincronizar corretamente entre celular e computador, use https://apporganizamais.netlify.app";
-      document.body.appendChild(warning);
+  .app{grid-template-columns:268px minmax(0,1fr);background:transparent}
+  #appSidebar{
+    background:
+      radial-gradient(circle at 20% 0%, rgba(52,211,153,.14), transparent 18rem),
+      linear-gradient(180deg,var(--om-sidebar),var(--om-sidebar-2));
+    border-right:1px solid rgba(255,255,255,.06);
+    box-shadow:16px 0 50px rgba(15,23,42,.08);
+    padding:20px 16px;
+    z-index:50;
+  }
+
+  .brand-wrap{
+    display:flex;align-items:center;gap:11px;
+    padding:5px 7px 19px;
+  }
+  .brand-icon{
+    width:38px;height:38px;display:grid;place-items:center;
+    border-radius:12px;
+    background:linear-gradient(135deg,#2563eb,#10b981);
+    color:#fff;font-size:26px;font-weight:900;
+    box-shadow:0 8px 22px rgba(37,99,235,.35);
+  }
+  .brand-text,.side-logo{font-size:24px!important;font-weight:900!important;letter-spacing:-.7px}
+  .brand-text span,.side-logo span{color:#5eead4!important}
+
+  .userbox{
+    display:flex!important;align-items:center!important;gap:11px!important;
+    padding:13px!important;margin-bottom:14px!important;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.055)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .avatar-circle{
+    flex:0 0 auto;
+    width:42px!important;height:42px!important;border-radius:14px!important;
+    box-shadow:0 6px 16px rgba(0,0,0,.18);
+  }
+  #userName{font-size:13px}
+  #userEmail{
+    display:block;max-width:158px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:11px!important;color:#94a3b8!important;margin-top:2px
+  }
+
+  .nav-scroll{padding-right:2px}
+  .nav-title{
+    padding:14px 11px 5px!important;
+    font-size:10px!important;text-transform:uppercase;letter-spacing:1.35px;
+    color:#64748b!important;font-weight:900!important
+  }
+  nav button{
+    min-height:40px;
+    border:1px solid transparent;
+    border-radius:12px!important;
+    padding:10px 11px!important;
+    margin:3px 0!important;
+    font-size:13px!important;
+    transition:transform .16s ease,background .16s ease,border-color .16s ease,color .16s ease;
+  }
+  nav button:hover{
+    transform:translateX(2px);
+    background:rgba(255,255,255,.07)!important;
+    border-color:rgba(255,255,255,.07);
+    box-shadow:none!important;
+  }
+  nav button.active{
+    background:linear-gradient(135deg,#2563eb,#3b82f6)!important;
+    color:#fff!important;
+    border-color:rgba(255,255,255,.08);
+    box-shadow:0 8px 20px rgba(37,99,235,.24)!important;
+  }
+
+  .logout-area{padding:10px 3px 0}
+  .logout-area .btn{
+    border-radius:12px!important;background:rgba(239,68,68,.12)!important;
+    color:#fecaca!important;border:1px solid rgba(239,68,68,.18)!important;
+  }
+  .logout-area .btn:hover{background:rgba(239,68,68,.2)!important}
+
+  main{
+    max-width:1480px!important;
+    padding:0 30px 36px!important;
+  }
+
+  .topbar{
+    position:sticky;top:0;z-index:35;
+    margin:0 -30px 24px!important;
+    padding:18px 30px!important;
+    min-height:82px;
+    background:rgba(244,247,251,.86);
+    border-bottom:1px solid rgba(226,232,240,.82);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+  }
+  .topbar-heading{display:flex;align-items:center;gap:12px}
+  .topbar h1{font-size:27px!important;letter-spacing:-.8px!important;line-height:1.05}
+  .topbar .muted{font-size:12px;margin-top:5px}
+  .top-actions{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap;justify-content:flex-end}
+
+  .sync-status{
+    border:1px solid #dceee8;
+    background:#f0fdf8!important;
+    color:#047857!important;
+    border-radius:999px!important;
+    padding:8px 11px!important;
+    font-size:11px!important;
+    font-weight:800!important;
+  }
+  .sync-dot{box-shadow:0 0 0 4px rgba(16,185,129,.10)}
+
+  .workspace-select{
+    width:auto!important;min-width:190px;max-width:245px!important;
+    margin:0!important;padding:10px 34px 10px 12px!important;
+    border-radius:12px!important;border-color:var(--om-border)!important;
+    background:var(--om-surface)!important;font-size:12px;font-weight:700;
+  }
+  .notify-btn,.theme-toggle-btn{
+    width:40px;height:40px;border-radius:12px!important;
+    display:grid;place-items:center;
+    background:var(--om-surface)!important;color:var(--om-text)!important;
+    border:1px solid var(--om-border)!important;
+    box-shadow:0 5px 14px rgba(15,23,42,.04);
+    transition:.16s ease;
+  }
+  .notify-btn:hover,.theme-toggle-btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.08)}
+  .quick-top-btn{
+    height:40px;padding:0 14px;border-radius:12px;
+    color:#fff;background:linear-gradient(135deg,#2563eb,#4f46e5);
+    font-size:12px;font-weight:800;
+    box-shadow:0 8px 18px rgba(37,99,235,.20);
+  }
+
+  section{animation:omFade .22s ease}
+  @keyframes omFade{from{opacity:.3;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  .box{
+    position:relative;
+    background:var(--om-surface)!important;
+    border:1px solid var(--om-border);
+    border-radius:var(--om-radius)!important;
+    box-shadow:var(--om-shadow)!important;
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+  }
+  .box:hover{transform:translateY(-2px);box-shadow:var(--om-shadow-hover)!important;border-color:#d7dfeb}
+  .box small{font-weight:750;letter-spacing:.02em;color:var(--om-muted)!important}
+  .box h2{letter-spacing:-.7px}
+  .box h3{letter-spacing:-.35px}
+
+  #dashboardView > .grid{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:14px!important;
+    margin-bottom:14px!important;
+  }
+  #dashboardView > .grid .box{
+    min-height:116px;
+    padding:18px!important;
+    overflow:hidden;
+  }
+  #dashboardView > .grid .box::after{
+    content:"";
+    position:absolute;right:-30px;top:-38px;width:92px;height:92px;border-radius:50%;
+    background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(16,185,129,.04));
+    pointer-events:none;
+  }
+
+  .trial-banner{
+    overflow:hidden;position:relative;
+    background:
+      radial-gradient(circle at 92% 20%,rgba(255,255,255,.18),transparent 13rem),
+      linear-gradient(120deg,#1d4ed8 0%,#4f46e5 52%,#0f9f7f 100%)!important;
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:26px!important;
+    padding:24px 26px!important;
+    box-shadow:0 18px 42px rgba(37,99,235,.18)!important;
+  }
+  .trial-banner h2{font-size:23px!important;letter-spacing:-.5px}
+  .trial-banner p{font-size:13px;max-width:720px}
+
+  .layout{gap:16px!important}
+  input,select,textarea{
+    color:var(--om-text)!important;
+    border:1px solid var(--om-border)!important;
+    background:var(--om-surface)!important;
+    border-radius:12px!important;
+    transition:border-color .15s ease,box-shadow .15s ease;
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none!important;border-color:#93b4ff!important;
+    box-shadow:0 0 0 4px rgba(37,99,235,.09)!important;
+  }
+
+  .btn{
+    border-radius:12px!important;
+    transition:transform .15s ease,filter .15s ease,box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);filter:brightness(.99);box-shadow:0 8px 18px rgba(15,23,42,.08)}
+  .btn:active{transform:none}
+  .btn:not(.red):not(.green):not(.light):not(.dark){
+    background:linear-gradient(135deg,#2563eb,#4f46e5)!important
+  }
+
+  .transaction,.item{
+    border-color:var(--om-border)!important;
+    border-radius:10px;
+  }
+  .tag,.pill{border:1px solid rgba(37,99,235,.08)}
+  .empty{
+    background:var(--om-surface-2);
+    border:1px dashed #d8e0eb;
+    border-radius:14px;
+    margin-top:10px;
+  }
+
+  .chart-wrap{min-height:270px!important}
+  .score-circle{box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),0 12px 28px rgba(15,23,42,.08)}
+
+  .notification-panel{
+    position:fixed!important;right:30px!important;top:78px!important;
+    width:min(420px,calc(100vw - 30px))!important;z-index:70;
+    border:1px solid var(--om-border)!important;
+    background:var(--om-surface)!important;
+    box-shadow:0 24px 60px rgba(15,23,42,.20)!important;
+    border-radius:18px!important;
+  }
+
+  .mobile-menu-btn{display:none}
+  .sidebar-overlay{display:none}
+
+  [data-theme="dark"]{
+    --om-bg:#0b1120;
+    --om-surface:#121b2c;
+    --om-surface-2:#0e1726;
+    --om-text:#e7edf7;
+    --om-muted:#94a3b8;
+    --om-border:#253249;
+    --om-shadow:0 12px 36px rgba(0,0,0,.16);
+    --om-shadow-hover:0 18px 42px rgba(0,0,0,.25);
+  }
+  [data-theme="dark"] body{
+    background:
+      radial-gradient(circle at 85% 0%,rgba(37,99,235,.10),transparent 25rem),
+      var(--om-bg);
+  }
+  [data-theme="dark"] .topbar{
+    background:rgba(11,17,32,.88);
+    border-bottom-color:#1f2b40;
+  }
+  [data-theme="dark"] .muted,
+  [data-theme="dark"] .box small{color:var(--om-muted)!important}
+  [data-theme="dark"] .sync-status{background:rgba(16,185,129,.10)!important;border-color:rgba(16,185,129,.16)!important}
+  [data-theme="dark"] .empty{border-color:#2c3a52}
+  [data-theme="dark"] .btn.light{background:#1d2a42!important;color:#93c5fd!important}
+  [data-theme="dark"] .notification-panel{color:var(--om-text)}
+  [data-theme="dark"] canvas{filter:saturate(.92) brightness(.94)}
+
+  @media(max-width:1080px){
+    .app{grid-template-columns:226px minmax(0,1fr)}
+    #appSidebar{padding-left:12px;padding-right:12px}
+    #dashboardView > .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+    .quick-top-btn{display:none}
+    main{padding-left:20px!important;padding-right:20px!important}
+    .topbar{margin-left:-20px!important;margin-right:-20px!important;padding-left:20px!important;padding-right:20px!important}
+  }
+
+  @media(max-width:760px){
+    .app{display:block!important}
+    #appSidebar{
+      position:fixed!important;left:-290px!important;top:0!important;
+      width:270px!important;height:100dvh!important;
+      transition:left .22s ease!important;
+      z-index:100!important;
     }
-  });
-</script>
+    body.mobile-menu-open #appSidebar{left:0!important}
+    .sidebar-overlay{
+      display:block;position:fixed;inset:0;background:rgba(2,6,23,.56);
+      opacity:0;visibility:hidden;transition:.2s ease;z-index:90;
+      backdrop-filter:blur(2px);
+    }
+    body.mobile-menu-open .sidebar-overlay{opacity:1;visibility:visible}
+    .mobile-menu-btn{
+      display:grid;width:40px;height:40px;place-items:center;
+      border-radius:12px;background:var(--om-surface);color:var(--om-text);
+      border:1px solid var(--om-border);font-size:18px;
+    }
+    main{padding:0 14px 28px!important}
+    .topbar{
+      margin:0 -14px 18px!important;padding:13px 14px!important;
+      align-items:flex-start!important;gap:10px!important;min-height:72px;
+    }
+    .topbar h1{font-size:21px!important}
+    .topbar .muted{display:none}
+    .top-actions{gap:6px!important}
+    .sync-status{display:none!important}
+    .workspace-select{min-width:0!important;width:118px!important;max-width:118px!important}
+    #dashboardView > .grid{grid-template-columns:1fr 1fr!important;gap:10px!important}
+    #dashboardView > .grid .box{min-height:108px;padding:14px!important}
+    #dashboardView > .grid .box h2{font-size:19px!important}
+    #dashboardView > .grid .box small{font-size:10.5px!important}
+    .layout,.row{grid-template-columns:1fr!important}
+    .trial-banner{padding:20px!important}
+    .trial-banner h2{font-size:20px!important}
+    .notification-panel{right:14px!important;top:70px!important;width:calc(100vw - 28px)!important}
+  }
+
+  @media(max-width:430px){
+    #dashboardView > .grid{grid-template-columns:1fr!important}
+    #dashboardView > .grid .box{min-height:auto}
+    .workspace-select{width:105px!important;max-width:105px!important}
+    .theme-toggle-btn{display:none}
+  }
+</style>
+
+
+<style id="organizamais-v4-1-auth">
+  #authScreen{
+    background:
+      radial-gradient(circle at 18% 20%, rgba(94,234,212,.12), transparent 23rem),
+      radial-gradient(circle at 75% 72%, rgba(59,130,246,.16), transparent 28rem),
+      linear-gradient(135deg,#10204a 0%,#173477 48%,#214dd2 100%)!important;
+  }
+  #authScreen .auth-left{
+    max-width:670px;
+    padding-right:42px;
+  }
+  #authScreen .auth-left h1{
+    max-width:620px;
+    font-size:clamp(35px,4vw,54px)!important;
+    line-height:1.06!important;
+    letter-spacing:-1.6px;
+  }
+  #authScreen .auth-left > p{
+    max-width:590px;
+    font-size:17px!important;
+    line-height:1.6;
+    color:rgba(255,255,255,.82)!important;
+  }
+  #authScreen .feature{
+    background:rgba(255,255,255,.09)!important;
+    border:1px solid rgba(255,255,255,.15)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter:blur(10px);
+  }
+  #authScreen .auth-card{
+    border-radius:30px!important;
+    border:1px solid rgba(255,255,255,.65);
+    box-shadow:0 30px 80px rgba(2,6,23,.28)!important;
+  }
+  #authScreen .auth-card input,
+  #authScreen .auth-card select{
+    min-height:50px;
+  }
+  #authScreen .auth-card .btn{
+    min-height:50px;
+    font-size:15px!important;
+    font-weight:850!important;
+  }
+  #authScreen .brand-icon{
+    background:linear-gradient(135deg,#2563eb,#14b8a6);
+  }
+  #authScreen .brand-text span{
+    color:#5eead4!important;
+  }
+  @media(max-width:900px){
+    #authScreen .auth-left{padding-right:0}
+  }
+</style>
 
 </head>
 <body>
@@ -303,7 +685,7 @@
 </section>
 
 <section id="appScreen" class="app hidden">
-  <aside>
+  <aside id="appSidebar">
     <div class="brand-wrap">
       <div class="brand-icon">+</div>
       <div class="brand-text">Organiza<span>Mais</span></div>
@@ -355,16 +737,22 @@
       <button class="btn red logout" onclick="logout()">Sair</button>
     </div>
   </aside>
+  <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileMenu()"></div>
 
   <main>
     <div class="topbar">
-      <div>
-        <h1 id="pageTitle">Dashboard</h1>
-        <p class="muted">Ambiente atual: <strong id="currentWorkspaceName">-</strong></p>
+      <div class="topbar-heading">
+        <button class="mobile-menu-btn" type="button" onclick="toggleMobileMenu()" aria-label="Abrir menu">☰</button>
+        <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p class="muted">Ambiente atual: <strong id="currentWorkspaceName">-</strong></p>
+        </div>
       </div>
       <div class="top-actions">
         <span id="syncStatus" class="sync-status"><span class="sync-dot"></span>Sincronizado</span>
-        <button class="notify-btn" onclick="toggleNotifications()">🔔</button>
+        <button class="quick-top-btn" type="button" onclick="setView('transactions')">＋ Novo lançamento</button>
+        <button class="theme-toggle-btn" type="button" onclick="toggleTheme()" aria-label="Alternar tema" title="Alternar tema">◐</button>
+        <button class="notify-btn" onclick="toggleNotifications()" aria-label="Notificações" title="Notificações">🔔</button>
         <select id="workspaceSelect" class="workspace-select" onchange="changeWorkspace()"></select>
       </div>
     </div>
@@ -1114,6 +1502,22 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
+  // URL oficial usada nos e-mails do Firebase.
+  // Em produção preserva /organizamais/ do GitHub Pages.
+  // Se o arquivo for aberto localmente, usa o endereço público oficial.
+  const PUBLIC_APP_URL = "https://carolinagomescruz8-dot.github.io/organizamais/";
+  const APP_BASE_URL = window.location.protocol === "file:"
+    ? PUBLIC_APP_URL
+    : new URL("./", window.location.href).href;
+  const EMAIL_ACTION_SETTINGS = {
+    url: APP_BASE_URL + "?verified=1",
+    handleCodeInApp: false
+  };
+  const PASSWORD_ACTION_SETTINGS = {
+    url: APP_BASE_URL,
+    handleCodeInApp: false
+  };
+
   let selectedAccountType = "personal";
   let currentUser = null;
   let editingBillId = null;
@@ -1222,10 +1626,7 @@
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
-      await sendEmailVerification(cred.user, {
-        url: window.location.origin + "?verified=1",
-        handleCodeInApp: false
-      });
+      await sendEmailVerification(cred.user, EMAIL_ACTION_SETTINGS);
 
       await setDoc(doc(db, "users", cred.user.uid), {
         name, email, accountType: selectedAccountType,
@@ -1268,10 +1669,7 @@
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       if (!cred.user.emailVerified) {
-        await sendEmailVerification(cred.user, {
-        url: window.location.origin + "?verified=1",
-        handleCodeInApp: false
-      });
+        await sendEmailVerification(cred.user, EMAIL_ACTION_SETTINGS);
         setMsg("Seu e-mail ainda não foi confirmado. Reenviamos a verificação. Confira sua caixa de entrada e o Spam.", "error");
         await signOut(auth);
       }
@@ -1287,7 +1685,7 @@
       return;
     }
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, email, PASSWORD_ACTION_SETTINGS);
       setMsg("E-mail de recuperação enviado.", "success");
     } catch (error) {
       setMsg("Erro: " + translateError(error.code), "error");
@@ -1406,7 +1804,7 @@
 
   window.sendSettingsPasswordReset = async () => {
     if (!currentUser?.email) return;
-    await sendPasswordResetEmail(auth, currentUser.email);
+    await sendPasswordResetEmail(auth, currentUser.email, PASSWORD_ACTION_SETTINGS);
     alert("Enviamos um e-mail para troca de senha.");
   };
 
@@ -3068,5 +3466,42 @@
     return errors[code] || code;
   }
 </script>
+
+<script id="organizamais-v4-js">
+(function(){
+  const root = document.documentElement;
+  const savedTheme = localStorage.getItem("organizamais_theme");
+  if(savedTheme === "dark") root.setAttribute("data-theme","dark");
+
+  window.toggleTheme = function(){
+    const isDark = root.getAttribute("data-theme") === "dark";
+    if(isDark){
+      root.removeAttribute("data-theme");
+      localStorage.setItem("organizamais_theme","light");
+    }else{
+      root.setAttribute("data-theme","dark");
+      localStorage.setItem("organizamais_theme","dark");
+    }
+  };
+
+  window.toggleMobileMenu = function(){
+    document.body.classList.toggle("mobile-menu-open");
+  };
+  window.closeMobileMenu = function(){
+    document.body.classList.remove("mobile-menu-open");
+  };
+
+  document.addEventListener("click", function(e){
+    if(e.target.closest("#appSidebar nav button")){
+      window.closeMobileMenu();
+    }
+  });
+
+  window.addEventListener("resize", function(){
+    if(window.innerWidth > 760) window.closeMobileMenu();
+  });
+})();
+</script>
+
 </body>
 </html>

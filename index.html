@@ -1005,6 +1005,35 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
   @media(max-width:480px){.notification-settings-grid{grid-template-columns:1fr}}
 </style>
 
+
+<style id="organizamais-v7-3-workspace-nav-fix">
+  .workspace-profile{display:flex!important;align-items:center!important;gap:7px!important;min-width:260px}
+  .workspace-profile-text{min-width:72px;max-width:110px}
+  .workspace-profile-text strong,.workspace-profile-text small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .workspace-top-select{
+    position:static!important;opacity:1!important;width:128px!important;height:34px!important;
+    border:1px solid #30383d!important;border-radius:8px!important;background:#101619!important;
+    color:#e8edef!important;padding:0 25px 0 9px!important;font-size:9px!important;cursor:pointer!important;
+  }
+  .workspace-add-btn{
+    width:34px;height:34px;border-radius:8px;border:1px solid #ff6500;background:#151b1f;
+    color:#ff6500;font-size:17px;font-weight:800;cursor:pointer;display:grid;place-items:center
+  }
+  .workspace-add-btn:hover{background:#ff6500;color:#fff}
+  #navWorkspaces{display:flex!important}
+  .workspace-item{cursor:pointer;transition:.15s ease}
+  .workspace-item:hover{border-color:#ff6500!important;transform:translateY(-1px)}
+  .workspace-current{box-shadow:inset 3px 0 0 #ff6500}
+  @media(max-width:1000px){
+    .workspace-profile{min-width:auto}
+    .workspace-profile-text{display:none}
+    .workspace-top-select{width:105px!important}
+  }
+  @media(max-width:760px){
+    .workspace-top-select{width:92px!important}
+  }
+</style>
+
 </head>
 <body>
 
@@ -1099,7 +1128,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         <button id="navAccounts" onclick="safeOrganizaView('accounts')"><span>🏛</span>Contas e Bancos</button>
         <button id="navReconciliation" onclick="safeOrganizaView('reconciliation')"><span>⇄</span>Conciliação Bancária <b class="side-badge orange">Novo</b></button>
         <button id="navCards" onclick="safeOrganizaView('cards')"><span>▣</span>Cartões de Crédito</button>
-        <button id="navTransfers" onclick="safeOrganizaView('accounts')"><span>⇄</span>Transferências</button>
+        <button id="navTransfers" onclick="safeOrganizaView('transfers')"><span>⇄</span>Transferências</button>
         <button id="navInvestments" onclick="safeOrganizaView('investments')"><span>⌁</span>Investimentos</button>
         <button id="navGoals" onclick="safeOrganizaView('goals')"><span>◎</span>Metas Financeiras</button>
         <button id="navPlanning" onclick="safeOrganizaView('planning')"><span>▣</span>Planejamento</button>
@@ -1108,6 +1137,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         <button id="navUpdates" onclick="safeOrganizaView('updates')"><span>◷</span>Atualizações <b class="side-badge orange">Novo</b></button>
         <button id="navAI" onclick="safeOrganizaView('ai')"><span>✧</span>Organiza IA <b class="side-badge purple">Beta</b></button>
         <div class="premium-nav-divider"></div>
+        <button id="navWorkspaces" onclick="safeOrganizaView('workspaces')"><span>▦</span>Ambientes</button>
         <button id="navSettings" onclick="safeOrganizaView('settings')"><span>⚙</span>Configurações</button>
         <button id="navHelp" onclick="safeOrganizaView('help')"><span>?</span>Ajuda e Suporte</button>
 
@@ -1116,7 +1146,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         <button id="navSalaries" class="hidden" onclick="safeOrganizaView('salaries')">Salários</button>
         <button id="navLoans" class="hidden" onclick="safeOrganizaView('loans')">Empréstimos</button>
         <button id="navReserves" class="hidden" onclick="safeOrganizaView('reserves')">Reservas</button>
-        <button id="navWorkspaces" class="hidden" onclick="safeOrganizaView('workspaces')">Ambientes</button>
+        
         <button id="navSubscription" class="hidden" onclick="safeOrganizaView('subscription')">Assinatura</button>
         <button id="navAdmin" class="hidden" onclick="safeOrganizaView('admin')">Administração</button>
       </nav>
@@ -1159,10 +1189,14 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         <span id="syncStatus" class="sync-status"><span class="sync-dot"></span></span>
         <button class="top-icon notify-btn" onclick="toggleNotifications()">♧<span id="notificationBadge" class="notification-badge">0</span></button>
         <button class="top-icon" onclick="toggleTheme()">☼</button>
-        <div class="top-profile">
+        <div class="top-profile workspace-profile">
           <div id="topProfileAvatar" class="top-avatar">C</div>
-          <div><strong id="topUserName">Carolina</strong><small id="currentWorkspaceName">Perfil pessoal</small></div>
-          <select id="workspaceSelect" class="workspace-overlay-select" onchange="changeWorkspace()"></select>
+          <div class="workspace-profile-text">
+            <strong id="topUserName">Carolina</strong>
+            <small id="currentWorkspaceName">Perfil pessoal</small>
+          </div>
+          <select id="workspaceSelect" class="workspace-top-select" onchange="changeWorkspace()" title="Trocar ambiente"></select>
+          <button class="workspace-add-btn" type="button" onclick="safeOrganizaView('workspaces')" title="Criar ou gerenciar ambientes">＋</button>
         </div>
       </div>
     </div>
@@ -1798,13 +1832,14 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
       <div class="layout">
         <div class="box">
           <h3>Novo ambiente</h3>
+          <p class="muted">Separe suas finanças por contexto. Ex.: Pessoal, Carolina Gomes Engenharia ou um projeto específico.</p>
           <input id="workspaceName" placeholder="Ex: Pessoal, Engenharia, Domo Cookies">
           <select id="workspaceType">
             <option value="personal">Pessoal</option>
             <option value="business">Empresa</option>
             <option value="project">Projeto</option>
           </select>
-          <button class="btn green" onclick="addWorkspace()">Criar ambiente</button>
+          <button class="btn green" onclick="addWorkspace()">＋ Criar ambiente</button>
         </div>
         <div class="box">
           <h3>Meus ambientes</h3>
@@ -1996,7 +2031,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
           <h2>🛡️ Central de Atualizações</h2>
           <p>Acompanhe o que mudou, o que foi corrigido e o que está sendo preparado para as próximas versões.</p>
         </div>
-        <div class="version-pill">Versão atual <strong>V7.2</strong></div>
+        <div class="version-pill">Versão atual <strong>V7.3</strong></div>
       </div>
 
       <div class="updates-layout">
@@ -2004,11 +2039,12 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
           <div class="section-head">
             <div>
               <small>VERSÃO ATUAL</small>
-              <h3>V7.2 • Setembro/2026</h3>
+              <h3>V7.3 • Setembro/2026</h3>
             </div>
             <span class="meta-chip good">Mais recente</span>
           </div>
           <div class="timeline">
+            <div class="timeline-item"><span class="timeline-icon">▦</span><div><strong>Ambientes e navegação corrigidos</strong><p>Seletor de ambiente visível no topo, botão para criar ambientes, troca rápida de ambiente e roteamento reforçado para impedir telas em branco.</p></div></div>
             <div class="timeline-item"><span class="timeline-icon">🔔</span><div><strong>Alertas gratuitos de vencimento</strong><p>Avisos em 7, 3 e 1 dia, no dia do vencimento e após o vencimento, com badge, painel no dashboard e notificações do navegador quando o OrganizaMais estiver ativo.</p></div></div>
             <div class="timeline-item"><span class="timeline-icon">🏦</span><div><strong>Conciliação Bancária OFX/CSV</strong><p>Importação de extratos, comparação automática com lançamentos, identificação de possíveis duplicidades e criação dos itens faltantes.</p></div></div>
             <div class="timeline-item"><span class="timeline-icon">📊</span><div><strong>Orçamento Inteligente</strong><p>Limites mensais por categoria, consumo, saldo disponível e projeção de estouro.</p></div></div>
@@ -3057,6 +3093,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     dashboard:    { section:"dashboardView",    nav:"navDashboard",    title:"Visão Geral" },
     transactions: { section:"transactionsView", nav:"navTransactions", title:"Entradas e Saídas" },
     accounts:     { section:"accountsView",     nav:"navAccounts",     title:"Contas e Bancos" },
+    transfers:    { section:"accountsView",     nav:"navTransfers",    title:"Transferências" },
     reconciliation:{ section:"reconciliationView", nav:"navReconciliation", title:"Conciliação Bancária" },
     goals:        { section:"goalsView",        nav:"navGoals",        title:"Metas Financeiras" },
     reserves:     { section:"reservesView",     nav:"navReserves",     title:"Reservas" },
@@ -3103,7 +3140,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         updateDashboard();
       } else if (view === "transactions") {
         renderTransactions();
-      } else if (view === "accounts") {
+      } else if (view === "accounts" || view === "transfers") {
         renderBankAccounts();
         populateAccountSelects();
       } else if (view === "reconciliation") {
@@ -5639,27 +5676,51 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
 
 
   window.addWorkspace = async () => {
-    const name = $("workspaceName").value.trim();
-    const type = $("workspaceType").value;
+    const name = $("workspaceName")?.value.trim();
+    const type = $("workspaceType")?.value || "personal";
+    if (!currentUser) return alert("Faça login novamente para criar um ambiente.");
     if (!name) return alert("Informe o nome do ambiente.");
-    await addDoc(collection(db, "workspaces"), {
-      userId: currentUser.uid, name, type, createdAt: serverTimestamp()
-    });
-    $("workspaceName").value = "";
+    try{
+      const ref = await addDoc(collection(db, "workspaces"), {
+        userId: currentUser.uid,
+        name,
+        type,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      currentWorkspaceId = ref.id;
+      if ($("workspaceName")) $("workspaceName").value = "";
+      alert(`Ambiente "${name}" criado com sucesso.`);
+    }catch(err){
+      console.error("Erro ao criar ambiente:", err);
+      alert("Não foi possível criar o ambiente. Verifique sua conexão e tente novamente.");
+    }
   };
 
   function renderWorkspaces() {
     $("workspacesList").className = workspaces.length ? "" : "empty";
     $("workspacesList").innerHTML = workspaces.length ? workspaces.map(w => `
-      <div class="item">
+      <div class="item workspace-item ${w.id === currentWorkspaceId ? "workspace-current" : ""}" onclick="selectWorkspaceFromList('${w.id}')">
         <div>
           <strong>${escapeHtml(w.name)}</strong><br>
           <small>${w.type === "business" ? "Empresa" : w.type === "project" ? "Projeto" : "Pessoal"}</small>
         </div>
-        <span class="pill">${w.id === currentWorkspaceId ? "Atual" : "Disponível"}</span>
+        <span class="pill">${w.id === currentWorkspaceId ? "Atual" : "Selecionar"}</span>
       </div>
     `).join("") : "Nenhum ambiente.";
   }
+
+
+  window.selectWorkspaceFromList = function(id){
+    if(!id || id===currentWorkspaceId) return;
+    currentWorkspaceId=id;
+    const select=$("workspaceSelect");
+    if(select) select.value=id;
+    renderWorkspaceSelect();
+    loadWorkspaceData();
+    renderWorkspaces();
+    safeOrganizaView("dashboard");
+  };
 
   window.addGoal = async () => {
     const name = $("goalName").value.trim();
@@ -5960,6 +6021,7 @@ document.addEventListener("keydown", function(e){
     dashboard:    ["dashboardView","navDashboard"],
     transactions: ["transactionsView","navTransactions"],
     accounts:     ["accountsView","navAccounts"],
+    transfers:    ["accountsView","navTransfers"],
     reconciliation:["reconciliationView","navReconciliation"],
     cards:        ["cardsView","navCards"],
     investments:  ["investmentsView","navInvestments"],
@@ -5981,58 +6043,107 @@ document.addEventListener("keydown", function(e){
     admin:        ["adminView","navAdmin"]
   };
 
-  window.safeOrganizaView = function(view){
-    const target = routes[view];
-    if(!target){
-      console.error("Rota inexistente:", view);
-      return;
+
+  // V7.3: roteador reforçado. Abre a tela primeiro e só depois tenta renderizar conteúdo.
+  window.openOrganizaView = function(view){
+    const cfg = (typeof VIEW_CONFIG !== "undefined" && VIEW_CONFIG[view]) ? VIEW_CONFIG[view] : null;
+    if(!cfg){
+      console.warn("Tela não encontrada:", view);
+      return false;
     }
 
-    Object.entries(routes).forEach(([key, ids]) => {
-      const section = document.getElementById(ids[0]);
-      if(section){
-        const show = key === view;
-        section.classList.toggle("hidden", !show);
-        section.style.display = show ? "block" : "none";
-        section.style.visibility = show ? "visible" : "hidden";
-        section.style.opacity = show ? "1" : "0";
+    // hide every main section registered in VIEW_CONFIG
+    const seenSections = new Set();
+    Object.values(VIEW_CONFIG).forEach(item=>{
+      if(seenSections.has(item.section)) return;
+      seenSections.add(item.section);
+      const sec=document.getElementById(item.section);
+      if(sec){
+        sec.classList.add("hidden");
+        sec.style.display="none";
+        sec.style.visibility="hidden";
+        sec.style.opacity="0";
       }
-
-      const nav = document.getElementById(ids[1]);
-      if(nav) nav.classList.toggle("active", key === view);
     });
 
-    const titleMap = {
-      dashboard:"Visão Geral", transactions:"Entradas e Saídas", accounts:"Contas e Bancos", reconciliation:"Conciliação Bancária",
-      cards:"Cartões de Crédito", investments:"Investimentos", goals:"Metas Financeiras",
-      planning:"Planejamento", bills:"Orçamentos", reports:"Relatórios",
-      updates:"Atualizações", ai:"Organiza IA", settings:"Configurações",
-      help:"Ajuda e Suporte", calendar:"Calendário Financeiro", recurring:"Recorrências",
-      salaries:"Salários", loans:"Empréstimos", reserves:"Reservas", workspaces:"Ambientes",
-      subscription:"Assinatura", admin:"Administração"
-    };
-    const pageTitle = document.getElementById("pageTitle");
-    if(pageTitle) pageTitle.textContent = titleMap[view] || "";
+    // deactivate all sidebar items
+    Object.values(VIEW_CONFIG).forEach(item=>{
+      const nav=document.getElementById(item.nav);
+      if(nav) nav.classList.remove("active");
+    });
+
+    const target=document.getElementById(cfg.section);
+    if(target){
+      target.classList.remove("hidden");
+      target.style.display="block";
+      target.style.visibility="visible";
+      target.style.opacity="1";
+    }
+    const nav=document.getElementById(cfg.nav);
+    if(nav) nav.classList.add("active");
+
+    const pageTitle=document.getElementById("pageTitle");
+    if(pageTitle) pageTitle.textContent=cfg.title || "";
 
     document.body.classList.remove("mobile-menu-open");
-    window.scrollTo(0,0);
+    try{ window.scrollTo(0,0); }catch(_){}
 
-    // Try to let the original application refresh the screen, but never
-    // allow an internal render error to hide the selected section again.
-    try{
-      if(typeof window.setView === "function"){
-        window.setView(view);
-        const targetSection = document.getElementById(target[0]);
-        if(targetSection){
-          targetSection.classList.remove("hidden");
-          targetSection.style.display = "block";
-          targetSection.style.visibility = "visible";
-          targetSection.style.opacity = "1";
-        }
-      }
-    }catch(err){
-      console.warn("Tela aberta pelo modo seguro:", view, err);
+    // render functions are intentionally isolated, so one failing renderer
+    // does not prevent the screen from opening.
+    const safeRun=(fn)=>{ try{ if(typeof fn==="function") fn(); }catch(err){ console.warn("Render protegido:",err); } };
+    if(view==="dashboard") safeRun(window.updateDashboard || (typeof updateDashboard!=="undefined" ? updateDashboard : null));
+    if(view==="transactions") safeRun(typeof renderTransactions!=="undefined" ? renderTransactions : null);
+    if(view==="accounts" || view==="transfers"){
+      safeRun(typeof renderBankAccounts!=="undefined" ? renderBankAccounts : null);
+      safeRun(typeof populateAccountSelects!=="undefined" ? populateAccountSelects : null);
     }
+    if(view==="reconciliation"){
+      safeRun(typeof populateReconciliationAccountSelect!=="undefined" ? populateReconciliationAccountSelect : null);
+      safeRun(typeof renderReconciliationResults!=="undefined" ? renderReconciliationResults : null);
+      safeRun(typeof updateReconciliationKPIs!=="undefined" ? updateReconciliationKPIs : null);
+    }
+    if(view==="goals") safeRun(typeof renderGoals!=="undefined" ? renderGoals : null);
+    if(view==="reserves") safeRun(typeof renderReserves!=="undefined" ? renderReserves : null);
+    if(view==="investments") safeRun(typeof renderInvestments!=="undefined" ? renderInvestments : null);
+    if(view==="bills") {
+      safeRun(typeof renderBills!=="undefined" ? renderBills : null);
+      safeRun(typeof renderSmartBudgets!=="undefined" ? renderSmartBudgets : null);
+    }
+    if(view==="cards") safeRun(typeof renderCreditCards!=="undefined" ? renderCreditCards : null);
+    if(view==="loans") safeRun(typeof renderLoans!=="undefined" ? renderLoans : null);
+    if(view==="workspaces") safeRun(typeof renderWorkspaces!=="undefined" ? renderWorkspaces : null);
+    if(view==="reports") safeRun(typeof renderReports!=="undefined" ? renderReports : null);
+    if(view==="calendar") safeRun(typeof renderCalendar!=="undefined" ? renderCalendar : null);
+    if(view==="planning"){
+      safeRun(typeof renderPlanningForecast!=="undefined" ? renderPlanningForecast : null);
+      safeRun(typeof renderMonthlyComparison!=="undefined" ? renderMonthlyComparison : null);
+    }
+    if(view==="ai"){
+      safeRun(typeof renderAIInsights!=="undefined" ? renderAIInsights : null);
+      safeRun(typeof buildAdvancedDecisions!=="undefined" ? buildAdvancedDecisions : null);
+    }
+    if(view==="settings"){
+      safeRun(typeof renderSettings!=="undefined" ? renderSettings : null);
+      safeRun(typeof loadDueNotificationSettingsUI!=="undefined" ? loadDueNotificationSettingsUI : null);
+    }
+    return true;
+  };
+
+  window.safeOrganizaView = function(view){
+    try{
+      if(window.openOrganizaView(view)) return;
+    }catch(err){
+      console.warn("Roteador reforçado falhou; usando fallback:", err);
+    }
+
+    const target = routes[view];
+    if(!target) return;
+    Object.entries(routes).forEach(([key, ids])=>{
+      const sec=document.getElementById(ids[0]);
+      if(sec) sec.classList.toggle("hidden", key!==view);
+      const nav=document.getElementById(ids[1]);
+      if(nav) nav.classList.toggle("active", key===view);
+    });
   };
 
   // Repair any stale inline styles when the application becomes visible.

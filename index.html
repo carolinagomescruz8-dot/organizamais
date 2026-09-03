@@ -3760,7 +3760,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
           <h2>🛡️ Central de Atualizações</h2>
           <p>Acompanhe o que mudou, o que foi corrigido e o que está sendo preparado para as próximas versões.</p>
         </div>
-        <div class="version-pill">Versão atual <strong>V12.7</strong></div>
+        <div class="version-pill">Versão atual <strong>V12.8</strong></div>
       </div>
 
       <div class="updates-layout">
@@ -3768,7 +3768,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
           <div class="section-head">
             <div>
               <small>VERSÃO ATUAL</small>
-              <h3>V12.7 • Setembro/2026</h3>
+              <h3>V12.8 • Setembro/2026</h3>
             </div>
             <span class="meta-chip good">Mais recente</span>
           </div>
@@ -5288,8 +5288,29 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
   };
 
   function refreshAfterFinancialAction(reason="ação financeira"){
+    // 1) recalcula imediatamente com os arrays locais já atualizados
+    try{renderSelectedFundingBalance();}catch(e){}
+    try{renderMovementFundingBalance();}catch(e){}
+    try{renderCardSpendingAnalysis();}catch(e){}
+    try{renderCreditCards();}catch(e){}
+    try{renderBills();}catch(e){}
+    try{renderMovementLedger();}catch(e){}
+    try{updateDashboard();}catch(e){}
+
+    // 2) refresca o restante da interface
     window.refreshOrganizaFinancialViews(reason);
-    setTimeout(()=>window.refreshOrganizaFinancialViews(`${reason} + sincronização`),120);
+
+    // 3) duas passagens adicionais cobrem o retorno assíncrono do Firebase
+    setTimeout(()=>{
+      try{renderSelectedFundingBalance();}catch(e){}
+      window.refreshOrganizaFinancialViews(`${reason} + sincronização`);
+    },160);
+
+    setTimeout(()=>{
+      try{renderSelectedFundingBalance();}catch(e){}
+      try{renderCardSpendingAnalysis();}catch(e){}
+      window.refreshOrganizaFinancialViews(`${reason} + confirmação`);
+    },550);
   }
 
 
@@ -5991,21 +6012,76 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     populateMovementFundingSources();
   }
 
+
+  function duplicateSafePart(v){
+    return String(v||"")
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9]+/g,"-")
+      .replace(/^-+|-+$/g,"");
+  }
+
+  function cardInstallmentUniqueKey({desc,purchaseDate,dueDate,cardInfo,number,total,parcel,funding}){
+    const cardKey=cardInfo?.external
+      ? `third:${duplicateSafePart(cardInfo.name)}:${duplicateSafePart(cardInfo.holder)}`
+      : `owned:${cardInfo?.id||duplicateSafePart(cardInfo?.name)}`;
+
+    const fundingKey=`${funding?.type||"none"}:${funding?.id||"none"}`;
+    const cents=Math.round(Number(parcel||0)*100);
+
+    return [
+      "card-installment-v1",
+      duplicateSafePart(desc),
+      String(purchaseDate||"").slice(0,10),
+      String(dueDate||"").slice(0,10),
+      cardKey,
+      fundingKey,
+      `${Number(number||1)}/${Number(total||1)}`,
+      String(cents)
+    ].join("|");
+  }
+
+  function existingInstallmentByKey(key, fallback={}){
+    return (bills||[]).find(b=>{
+      if(b.installmentUniqueKey && b.installmentUniqueKey===key) return true;
+
+      // Compatibilidade com parcelas salvas antes da chave única.
+      if(b.type!=="payable") return false;
+      if((b.competence||competenceFromDate(b.dueDate))!==fallback.competence) return false;
+      if(duplicateSafePart(b.desc)!==duplicateSafePart(fallback.desc)) return false;
+      if(Math.abs(effectiveBillValue(b)-Number(fallback.parcel||0))>0.01) return false;
+      if(Number(b.installmentCurrent||0)!==Number(fallback.number||0)) return false;
+      if(Number(b.installmentTotal||0)!==Number(fallback.total||0)) return false;
+
+      if(fallback.cardId && b.cardId && b.cardId!==fallback.cardId) return false;
+      if(!fallback.cardId && duplicateSafePart(b.cardName)!==duplicateSafePart(fallback.cardName)) return false;
+
+      const bFunding=`${b.fundingSourceType||""}:${b.fundingSourceId||""}`;
+      const fFunding=`${fallback.fundingType||""}:${fallback.fundingId||""}`;
+      if(fFunding!==":" && bFunding!==fFunding) return false;
+
+      return true;
+    });
+  }
+
   async function createMovementCardPurchase({desc,enteredValue,valueMode,purchaseDate,category,funding,cardInfo,installments,currentInstallment,notes}){
     const ownedCard=cardInfo?.card||null;
     const isExternal=cardInfo?.external===true;
     const firstDue=isExternal ? cardInfo.nextDue : firstInvoiceDueDate(ownedCard,purchaseDate);
+
     currentInstallment=Math.max(1,Math.min(Number(currentInstallment||1),installments));
     const remainingCount=installments-currentInstallment+1;
     const groupId=`movement-card-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+
     valueMode=valueMode==="total"?"total":"installment";
     const inputValue=roundMoney(enteredValue);
-
-    // Se o usuário informou a parcela, o total é apenas estimado para referência.
-    // Se informou o valor cheio, o total é exatamente o valor digitado.
     const originalTotal=valueMode==="total"
       ? inputValue
       : roundMoney(inputValue*installments);
+
+    let createdCount=0;
+    let skippedCount=0;
+    const createdBills=[];
 
     for(let step=0;step<remainingCount;step++){
       const number=currentInstallment+step;
@@ -6013,15 +6089,40 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         ? expectedInstallmentValue(originalTotal,installments,number)
         : inputValue;
       const dueDate=addMonthsToDate(firstDue,step);
+      const competence=competenceFromDate(dueDate);
 
       if(!(parcel>0)){
         throw new Error(`Valor inválido para a parcela ${number}/${installments}.`);
       }
 
-      await addDoc(collection(db,"bills"),{
-        userId:currentUser.uid,workspaceId:currentWorkspaceId,
-        desc,value:parcel,installmentValue:parcel,dueDate,competence:competenceFromDate(dueDate),
-        type:"payable",status:"pending",category,
+      const installmentUniqueKey=cardInstallmentUniqueKey({
+        desc,purchaseDate,dueDate,cardInfo,number,total:installments,parcel,funding
+      });
+
+      const existing=existingInstallmentByKey(installmentUniqueKey,{
+        competence,desc,parcel,number,total:installments,
+        cardId:isExternal?"":ownedCard?.id||"",
+        cardName:cardInfo.name,
+        fundingType:funding?.type||"",
+        fundingId:funding?.id||""
+      });
+
+      if(existing){
+        skippedCount++;
+        continue;
+      }
+
+      const payload={
+        userId:currentUser.uid,
+        workspaceId:currentWorkspaceId,
+        desc,
+        value:parcel,
+        installmentValue:parcel,
+        dueDate,
+        competence,
+        type:"payable",
+        status:"pending",
+        category,
         sourceAccount:funding?.type==="legacy_salary"?(funding.legacySourceAccount||funding.id):"other",
         accountId:funding?.type==="bank"?funding.id:(ownedCard?.defaultPaymentAccountId||""),
         fundingSourceType:funding?.type||"",
@@ -6038,18 +6139,56 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         externalCardHolder:isExternal?(cardInfo.holder||""):"",
         cardId:isExternal?"":ownedCard.id,
         cardName:cardInfo.name,
-        installmentCurrent:number,installmentTotal:installments,
-        installmentGroupId:groupId,purchaseDate,
+        installmentCurrent:number,
+        installmentTotal:installments,
+        installmentGroupId:groupId,
+        installmentUniqueKey,
+        purchaseDate,
         originalPurchaseTotal:originalTotal,
         installmentCalculationMode:valueMode==="total"?"full_total":"installment_value",
         installmentInputValue:inputValue,
-        installmentCalculationVersion:"v3_value_mode",
+        installmentCalculationVersion:"v5_duplicate_safe",
         firstInstallmentDue:firstDue,
         lastInstallmentDue:addMonthsToDate(firstDue,remainingCount-1),
-        notes:notes||"",createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+        notes:notes||"",
+        createdAt:serverTimestamp(),
+        updatedAt:serverTimestamp()
+      };
+
+      const ref=await addDoc(collection(db,"bills"),payload);
+
+      const localBill=normalizeBillForRuntime({
+        id:ref.id,
+        ...payload,
+        createdAt:null,
+        updatedAt:null
       });
+
+      // Atualiza a memória imediatamente. O onSnapshot depois substitui pela versão oficial.
+      bills.push(localBill);
+      createdBills.push(localBill);
+      createdCount++;
+
+      // Atualiza salário/cartões a cada parcela criada, inclusive a parcela do mês atual.
+      renderSelectedFundingBalance();
+      renderMovementFundingBalance();
+      renderCardSpendingAnalysis();
+      renderCreditCards();
     }
-    return {firstDue,lastDue:addMonthsToDate(firstDue,remainingCount-1),remainingCount,valueMode,inputValue,originalTotal};
+
+    bills.sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||""));
+
+    return {
+      firstDue,
+      lastDue:addMonthsToDate(firstDue,remainingCount-1),
+      remainingCount,
+      valueMode,
+      inputValue,
+      originalTotal,
+      createdCount,
+      skippedCount,
+      createdBills
+    };
   }
 
 
@@ -6543,7 +6682,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         const inst=validateMovementInstallments();
         if(!inst.valid) return alert("Confira a parcela atual e o total de parcelas.");
 
-        await createMovementCardPurchase({
+        const cardResult=await createMovementCardPurchase({
           desc,
           enteredValue:value,
           valueMode:currentMovementCardValueMode,
@@ -6560,12 +6699,29 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
           ? expectedInstallmentValue(value,inst.total,inst.current)
           : value;
 
-        if(currentMovementRecurring){
+        // Parcelamento já é uma repetição mensal controlada até a última parcela.
+        // Recorrência adicional só faz sentido em uma cobrança 1/1.
+        let recurringCreated=false;
+        if(currentMovementRecurring && inst.total===1 && cardResult.createdCount>0){
           await createMonthlyRecurringFromMovement({desc,value,type,category,funding,notes,date});
+          recurringCreated=true;
         }
-        alert(`${desc}: ${cardInfo.name} • parcela ${inst.current}/${inst.total} • ${money(currentParcelValue)} nesta parcela.${currentMovementRecurring?" Recorrência mensal criada para os próximos meses.":""}`);
+
+        if(cardResult.createdCount===0){
+          alert(`Este lançamento já existe. Nenhuma parcela foi criada novamente.`);
+        }else{
+          const parcelRange=inst.total>1
+            ? ` Parcelas ${inst.current}/${inst.total} até ${inst.total}/${inst.total} foram programadas automaticamente.`
+            : "";
+          const skipped=cardResult.skippedCount>0
+            ? ` ${cardResult.skippedCount} parcela(s) já existente(s) foram ignoradas para não duplicar.`
+            : "";
+          alert(`${desc}: ${cardInfo.name} • parcela atual ${inst.current}/${inst.total} • ${money(currentParcelValue)}.${parcelRange}${skipped}${recurringCreated?" Recorrência mensal 1/1 criada.":""}`);
+        }
+
         clearMovementForm();
         refreshAfterFinancialAction("novo lançamento em cartão");
+        setTimeout(()=>refreshAfterFinancialAction("novo lançamento em cartão confirmado"),350);
         return;
       }
 
@@ -6593,7 +6749,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         const dueDate=$("movementDueDate")?.value||"";
         if(!dueDate) return alert("Informe o vencimento.");
 
-        await addDoc(collection(db,"bills"),{
+        const pendingPayload={
           userId:currentUser.uid,
           workspaceId:currentWorkspaceId,
           desc,
@@ -6611,7 +6767,18 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
           notes,
           createdAt:serverTimestamp(),
           updatedAt:serverTimestamp()
-        });
+        };
+
+        const pendingRef=await addDoc(collection(db,"bills"),pendingPayload);
+        bills.push(normalizeBillForRuntime({
+          id:pendingRef.id,
+          ...pendingPayload,
+          createdAt:null,
+          updatedAt:null
+        }));
+        bills.sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||""));
+        renderSelectedFundingBalance();
+        renderMovementFundingBalance();
       }else{
         await createTransaction({
           desc,
@@ -6671,12 +6838,29 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
       return alert("Confira as parcelas do cartão. A parcela atual não pode ser maior que o total.");
     }
 
-    await addDoc(collection(db, "transactions"), {
-      userId: currentUser.uid,
-      workspaceId: currentWorkspaceId,
+    const payload={
+      userId:currentUser.uid,
+      workspaceId:currentWorkspaceId,
       ...data,
-      createdAt: serverTimestamp()
+      createdAt:serverTimestamp()
+    };
+
+    const ref=await addDoc(collection(db,"transactions"),payload);
+
+    // Atualização local imediata para o saldo da fonte reagir no mesmo clique.
+    transactions.push({
+      id:ref.id,
+      ...payload,
+      createdAt:null
     });
+    transactions.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+
+    renderSelectedFundingBalance();
+    renderMovementFundingBalance();
+    renderMovementLedger();
+    updateDashboard();
+
+    return ref;
   }
 
   window.removeTransaction = async id => {

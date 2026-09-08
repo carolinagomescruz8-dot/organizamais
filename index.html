@@ -4789,7 +4789,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
           <h2>🛡️ Central de Atualizações</h2>
           <p>Acompanhe o que mudou, o que foi corrigido e o que está sendo preparado para as próximas versões.</p>
         </div>
-        <div class="version-pill">Versão atual <strong>V13.9</strong></div>
+        <div class="version-pill">Versão atual <strong>V14.0</strong></div>
       </div>
 
       <div class="updates-layout">
@@ -4797,11 +4797,11 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
           <div class="section-head">
             <div>
               <small>VERSÃO ATUAL</small>
-              <h3>V13.9 • Setembro/2026</h3>
+              <h3>V14.0 • Setembro/2026</h3>
             </div>
             <span class="meta-chip good">Mais recente</span>
           </div>
-          <div class="timeline">
+          <div class="timeline"><div class="timeline-item"><span class="timeline-icon">✓</span><div><strong>Baixa única em todas as telas</strong><p>Movimentações, Contas, Dashboard, alertas e cartões agora usam a mesma regra de pagamento. Registros antigos são reparados quando existe uma movimentação de baixa correspondente.</p></div></div>
             <div class="timeline-item"><span class="timeline-icon">🗑</span><div><strong>Gerenciamento completo de Ambientes</strong><p>Agora é possível editar, arquivar, restaurar e excluir ambientes com confirmação forte. A exclusão remove também os dados financeiros vinculados.</p></div></div>
             <div class="timeline-item"><span class="timeline-icon">🔐</span><div><strong>Domínio oficial nos e-mails</strong><p>Verificação de e-mail e recuperação de senha agora retornam para https://apporganizamais.com.br/.</p></div></div>
             <div class="timeline-item"><span class="timeline-icon">?</span><div><strong>“Como usar o aplicativo” virou uma aba independente</strong><p>Configurações voltou a conter somente preferências. O manual completo e o mapa mental agora ficam em uma tela própria.</p></div></div>
@@ -5447,8 +5447,65 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     return s || "pending";
   }
 
+  function transactionPaidLike(t){
+    if(!t) return false;
+    const s=String(t.status||"").trim().toLowerCase();
+    if(["pending","pendente","cancelled","canceled","cancelado","cancelada"].includes(s)) return false;
+    return !s || [
+      "paid","pago","paga","received","recebido","recebida",
+      "realized","realizado","realizada","settled","baixado","baixada","done","closed"
+    ].includes(s);
+  }
+
+  function billPaymentEvidenceTransaction(b){
+    if(!b?.id || !(transactions||[]).length) return null;
+
+    const expectedType=b.type==="receivable"?"income":"expense";
+    const settlementTreatments=new Set([
+      "bill_settlement",
+      "credit_card_invoice_payment",
+      "credit_card_installment_payment",
+      "accounts_payable_settlement",
+      "accounts_receivable_settlement"
+    ]);
+
+    const candidates=(transactions||[]).filter(t=>{
+      if(!t || t.type!==expectedType || !transactionPaidLike(t)) return false;
+
+      // Vínculo direto é evidência definitiva.
+      if(t.billId && t.billId===b.id) return true;
+
+      const treatment=String(t.accountingTreatment||"").toLowerCase();
+      const score=transactionBillFingerprintScore(t,b);
+
+      // Uma baixa antiga, mesmo sem billId, pode ser reconhecida pelos dados financeiros.
+      if(settlementTreatments.has(treatment)) return score>=8;
+
+      // Compatibilidade com versões antigas que gravavam a baixa como movimentação comum.
+      // Exigimos uma correspondência forte para evitar marcar contas por coincidência de valor.
+      if(score<15) return false;
+
+      if(b.cardName && t.cardName && String(b.cardName)!==String(t.cardName)) return false;
+      if(Number(b.installmentCurrent||0)>0 && Number(t.installmentCurrent||0)>0 &&
+         Number(b.installmentCurrent)!==Number(t.installmentCurrent)) return false;
+      if(Number(b.installmentTotal||0)>0 && Number(t.installmentTotal||0)>0 &&
+         Number(b.installmentTotal)!==Number(t.installmentTotal)) return false;
+
+      const billComp=billEconomicCompetence(b);
+      const txComp=(t.economicCompetence&&/^\d{4}-\d{2}$/.test(t.economicCompetence))
+        ? t.economicCompetence
+        : ((t.competence&&/^\d{4}-\d{2}$/.test(t.competence))?t.competence:competenceFromDate(t.date||""));
+
+      return !billComp || !txComp || billComp===txComp || financeDatesNear(t,b);
+    }).map(t=>({t,score:t.billId===b.id?999:transactionBillFingerprintScore(t,b)}))
+      .sort((a,b)=>b.score-a.score);
+
+    return candidates[0]?.t||null;
+  }
+
   function billIsPaid(b){
-    return canonicalBillStatusValue(b)==="paid";
+    if(canonicalBillStatusValue(b)==="paid") return true;
+    return !!billPaymentEvidenceTransaction(b);
   }
 
   const billStatusRepairInFlight=new Set();
@@ -5456,34 +5513,28 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
   function reconcileBillsWithSettlementTransactionsRuntime(persist=true){
     if(!(bills||[]).length || !(transactions||[]).length) return 0;
 
-    const settledBillIds=new Set(
-      (transactions||[])
-        .filter(t=>{
-          if(!t?.billId) return false;
-          const treatment=String(t.accountingTreatment||"").toLowerCase();
-          const status=String(t.status||"").toLowerCase();
-          const paidLike=["paid","pago","paga","received","recebido","recebida","realized","realizado","realizada"].includes(status);
-          const settlementLike=treatment==="bill_settlement" || treatment==="credit_card_invoice_payment";
-          return settlementLike && paidLike;
-        })
-        .map(t=>t.billId)
-    );
-
     let changed=0;
     (bills||[]).forEach(b=>{
-      if(!b?.id || billIsPaid(b) || !settledBillIds.has(b.id)) return;
+      if(!b?.id || canonicalBillStatusValue(b)==="paid") return;
 
-      // Atualiza a tela imediatamente para a conta nunca aparecer paga e vencida ao mesmo tempo.
+      const evidence=billPaymentEvidenceTransaction(b);
+      if(!evidence) return;
+
+      // Atualiza a tela imediatamente: uma mesma conta nunca pode aparecer paga e vencida.
       b.rawStatus=b.status||"";
       b.status="paid";
       b._paidByLinkedSettlement=true;
+      b._matchedSettlementTransactionId=evidence.id||"";
       changed++;
 
       if(persist && !billStatusRepairInFlight.has(b.id)){
         billStatusRepairInFlight.add(b.id);
         updateDoc(doc(db,"bills",b.id),{
           status:"paid",
+          settlementTransactionId:b.settlementTransactionId||evidence.id||"",
+          paidDate:b.paidDate||evidence.date||"",
           repairedPaidStatusAt:serverTimestamp(),
+          repairedPaidStatusReason:evidence.billId===b.id?"linked_transaction":"matched_realized_transaction",
           updatedAt:serverTimestamp()
         }).catch(err=>console.error("Reparo de status da conta:",err))
           .finally(()=>billStatusRepairInFlight.delete(b.id));
@@ -5895,8 +5946,8 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     else if (daysLeft > 0) notes.push(`🎁 Seu teste grátis termina em ${daysLeft} dia(s).`);
     else notes.push("⛔ Seu teste grátis terminou. Escolha um plano para continuar.");
 
-    const dueSoon = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3);
-    const overdue = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) < 0);
+    const dueSoon = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3);
+    const overdue = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) < 0);
     const activeLoans = loans.filter(l => l.status !== "finished");
 
     if (overdue.length) notes.push(`🚨 Você tem ${overdue.length} conta(s) vencida(s).`);
@@ -6033,8 +6084,8 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
       insights.push({type:"warn", text:`⏳ Existem ${money(pending)} em lançamentos pendentes. Confira para evitar surpresa no caixa.`});
     }
 
-    const overdueBills = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) < 0);
-    const soonBills = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3);
+    const overdueBills = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) < 0);
+    const soonBills = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3);
     const activeLoans = loans.filter(l => l.status !== "finished");
     const loanTotal = activeLoans.reduce((s,l)=>s+(Math.max(0, Number(l.installments||0)-Number(l.paidInstallments||0))*Number(l.installment||0)),0);
     const pendingPayables = sumValues(openBillsThroughCurrentMonth("payable"));
@@ -8385,7 +8436,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     const expense = currentMonthExpense();
     const balance = income - expense;
     const reserveTotal = reserves.reduce((s,r)=>s+Number(r.current||0),0);
-    const overdue = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) < 0).length;
+    const overdue = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) < 0).length;
     const loansTotal = loans.filter(l=>l.status!=="finished").reduce((s,l)=>s+(Math.max(0, Number(l.installments||0)-Number(l.paidInstallments||0))*Number(l.installment||0)),0);
 
     let score = 50;
@@ -8921,9 +8972,9 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
       else if(guard.level==="warn") alerts.push({c:"warn",t:"Atenção aos gastos",x:`Restam ${money(guard.remaining)} dentro do limite seguro do mês.`});
       else alerts.push({c:"good",t:"Gastos sob controle",x:`Você ainda pode gastar até ${money(guard.remaining)} sem consumir a margem de segurança.`});
     }catch(e){}
-    const overdue=bills.filter(b=>b.status!=="paid"&&daysUntil(b.dueDate)<0);
+    const overdue=bills.filter(b=>!billIsPaid(b)&&daysUntil(b.dueDate)<0);
     if(overdue.length) alerts.push({c:"",t:"Atenção",x:`${overdue.length} conta(s) vencida(s) precisam de ação.`});
-    const soon=bills.filter(b=>b.status!=="paid"&&daysUntil(b.dueDate)>=0&&daysUntil(b.dueDate)<=4);
+    const soon=bills.filter(b=>!billIsPaid(b)&&daysUntil(b.dueDate)>=0&&daysUntil(b.dueDate)<=4);
     if(soon.length) alerts.push({c:"",t:"Vencimento",x:`${soon.length} compromisso(s) vencem nos próximos 4 dias.`});
     if(m.free<0) alerts.push({c:"warn",t:"Previsão",x:`Risco de déficit de ${money(Math.abs(m.free))} na competência.`});
     else alerts.push({c:"good",t:"Oportunidade",x:`Você tem ${money(m.free)} de dinheiro livre estimado.`});
@@ -8949,7 +9000,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     for(let i=dow-1;i>=0;i--) cells.push({d:prevLast-i,other:true});
     for(let d=1;d<=last.getDate();d++) cells.push({d,other:false});
     while(cells.length%7) cells.push({d:cells.length-last.getDate()-dow+1,other:true});
-    const today=new Date(), eventDays=new Set(bills.filter(b=>competenceFromDate(b.dueDate)===selectedCompetence&&b.status!=="paid").map(b=>Number(String(b.dueDate).slice(8,10))));
+    const today=new Date(), eventDays=new Set(bills.filter(b=>competenceFromDate(b.dueDate)===selectedCompetence&&!billIsPaid(b)).map(b=>Number(String(b.dueDate).slice(8,10))));
     box.innerHTML=cells.map(c=>{
       const isToday=!c.other&&today.getFullYear()===year&&today.getMonth()===month-1&&today.getDate()===c.d;
       return `<span class="${c.other?"other":""} ${isToday?"today":""} ${!c.other&&eventDays.has(c.d)?"event":""}">${c.d}</span>`;
@@ -8958,7 +9009,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
 
   function renderDashboardCommitments(){
     const box=$("dashboardCommitments");if(!box)return;
-    const items=bills.filter(b=>b.status!=="paid").slice().sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||"")).slice(0,4);
+    const items=bills.filter(b=>!billIsPaid(b)).slice().sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||"")).slice(0,4);
     box.innerHTML=items.map((b,i)=>`<div class="compact-item"><span class="compact-icon" style="background:${["#7b20bf","#359c3e","#f36a08","#2879d8"][i]}">${["nu","$","⌂","◉"][i]}</span><div><strong>${escapeHtml(b.desc||"Compromisso")}</strong><small>${formatDate(b.dueDate)}</small></div><strong>${money(b.value||0)}</strong></div>`).join("") || '<small>Nenhum compromisso em aberto.</small>';
   }
 
@@ -10097,8 +10148,8 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     $("balanceView").className = balance >= 0 ? "positive" : "negative";
     $("countView").textContent = monthTx.length;
 
-    const dueSoon = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3).length;
-    const overdue = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) < 0).length;
+    const dueSoon = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3).length;
+    const overdue = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) < 0).length;
     const activeLoans = loans.filter(l => l.status !== "finished").length;
 
     const pendingPayables = sumValues(openBillsThroughCurrentMonth("payable"));
@@ -10196,7 +10247,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     });
 
     (bills||[]).forEach(b=>{
-      if(b.status==="paid") return;
+      if(billIsPaid(b)) return;
       const bcomp=(b.competence && /^\d{4}-\d{2}$/.test(b.competence))
       ? b.competence
       : competenceFromDate(b.dueDate);
@@ -10510,7 +10561,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     if(!account) return 0;
     return roundMoney((bills||[])
       .filter(b=>{
-        if(b.type!=="payable" || b.status==="paid") return false;
+        if(b.type!=="payable" || billIsPaid(b)) return false;
         if(billEconomicCompetence(b)!==comp) return false;
 
         const explicitBankFunding=
@@ -11129,8 +11180,8 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
         : month.filter(b=>status==="paid"?b.status==="paid":b.status!=="paid");
 
       const monthTotal=statusMonth.reduce((s,b)=>s+effectiveBillValue(b),0);
-      const paid=month.filter(b=>b.status==="paid").reduce((s,b)=>s+effectiveBillValue(b),0);
-      const pending=month.filter(b=>b.status!=="paid").reduce((s,b)=>s+effectiveBillValue(b),0);
+      const paid=month.filter(b=>billIsPaid(b)).reduce((s,b)=>s+effectiveBillValue(b),0);
+      const pending=month.filter(b=>!billIsPaid(b)).reduce((s,b)=>s+effectiveBillValue(b),0);
 
       const future=all
         .filter(b=>
@@ -11236,7 +11287,7 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
   };
 
   function cardPendingBills(cardName,comp=null){
-    return (bills||[]).filter(b=>b.cardName===cardName && b.status!=="paid" && (!comp || (b.competence||competenceFromDate(b.dueDate))===comp));
+    return (bills||[]).filter(b=>b.cardName===cardName && !billIsPaid(b) && (!comp || (b.competence||competenceFromDate(b.dueDate))===comp));
   }
 
   function cardInvoicePendingForCompetence(cardName,comp=selectedCompetence){
@@ -14812,8 +14863,8 @@ main{max-width:none!important;padding:0 18px 28px!important;background:#090d10!i
     const cardInvoice = (typeof getAllCardNames === "function" ? getAllCardNames() : []).reduce((s,name)=>s+(typeof inferredCardInvoiceTotal === "function" ? inferredCardInvoiceTotal(name) : 0),0);
     const loansTotal = loans.filter(l=>l.status!=="finished").reduce((s,l)=>s+(Math.max(0, Number(l.installments||0)-Number(l.paidInstallments||0))*Number(l.installment||0)),0);
     const netWorth = balance + reserveTotal + investmentTotal - loansTotal;
-    const overdueBills = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) < 0);
-    const soonBills = bills.filter(b => b.status !== "paid" && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3);
+    const overdueBills = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) < 0);
+    const soonBills = bills.filter(b => !billIsPaid(b) && daysUntil(b.dueDate) !== null && daysUntil(b.dueDate) >= 0 && daysUntil(b.dueDate) <= 3);
 
     const expenseByCat = {};
     transactions.filter(t => t.type === "expense").forEach(t => expenseByCat[t.category] = (expenseByCat[t.category] || 0) + Number(t.value || 0));
